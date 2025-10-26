@@ -25,7 +25,7 @@ npm run prisma:generate
 # Ejecuta migraciones
 npm run prisma:migrate
 
-# Inserta datos iniciales (crea admin / ChangeMe123!)
+# Inserta datos iniciales (crea los usuarios admin, dept-head, project-head y user-standart todos con la contraseña ChangeMe123!)
 npm run prisma:seed
 ```
 
@@ -68,7 +68,8 @@ Esto levanta:
 
 1. Entra como `admin / ChangeMe123!`.
 2. El sistema solicitará cambiar la contraseña y generará las claves.
-3. Tras completar el primer acceso, podrás subir y descargar documentos cifrados.
+3. El sistema te pedirá configurar el TOTP.
+4. Tras completar el primer acceso, podrás subir y descargar documentos cifrados.
 
 ## 6. Comandos útiles
 
