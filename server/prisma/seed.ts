@@ -7,26 +7,53 @@ import { hashPassword } from '../src/utils/password';
  * @returns {Promise<void>} Resolves once seed completes.
  */
 const seed = async (): Promise<void> => {
-  const admin = await prisma.user.findFirst({ where: { role: 'admin' } });
-  if (admin) {
-    return;
-  }
-
-  const pwdHash = await hashPassword('ChangeMe123!');
-
-  await prisma.user.create({
-    data: {
+  const seedUsers = [
+    {
       id: 'admin-id',
       username: 'admin',
-      role: 'admin',
-      pwdHash,
-      publicKeyJwk: {},
-      privEnc: Buffer.alloc(0),
-      privNonce: Buffer.alloc(0),
-      clientSalt: Buffer.alloc(0),
-      kdfClient: { alg: 'PBKDF2-SHA256', iters: 310000 },
+      role: 'admin' as const,
+      password: 'ChangeMe123!',
     },
-  });
+    {
+      username: 'dept-head',
+      role: 'dept_head' as const,
+      password: 'DeptHead123!',
+    },
+    {
+      username: 'project-head',
+      role: 'project_head' as const,
+      password: 'ProjectHead123!',
+    },
+    {
+      username: 'user-standard',
+      role: 'user' as const,
+      password: 'UserStandard123!',
+    },
+  ];
+
+  for (const entry of seedUsers) {
+    const existing = await prisma.user.findUnique({
+      where: { username: entry.username },
+    });
+    if (existing) {
+      continue;
+    }
+
+    const pwdHash = await hashPassword(entry.password);
+    await prisma.user.create({
+      data: {
+        ...(entry.id ? { id: entry.id } : {}),
+        username: entry.username,
+        role: entry.role,
+        pwdHash,
+        publicKeyJwk: {},
+        privEnc: Buffer.alloc(0),
+        privNonce: Buffer.alloc(0),
+        clientSalt: Buffer.alloc(0),
+        kdfClient: { alg: 'PBKDF2-SHA256', iters: 310000 },
+      },
+    });
+  }
 };
 
 seed()

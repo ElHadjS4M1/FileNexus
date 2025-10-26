@@ -51,10 +51,14 @@ export function AuthProvider({ children }) {
     });
   }
 
-  async function login(username, password) {
+  async function login(username, password, totp) {
+    const body = { username, password };
+    if (totp) {
+      body.totp = totp;
+    }
     const loginResponse = await apiRequest("/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify(body),
     });
 
     if (loginResponse.requiresInit) {
@@ -91,13 +95,31 @@ export function AuthProvider({ children }) {
     }
 
     const finalUser = {
+      id: loginResponse.user.id,
       username: materials.username ?? loginResponse.user.username ?? username,
+      role: loginResponse.user.role,
+      totpEnabled: Boolean(loginResponse.user.totpEnabled),
       publicKeyPEM,
       privateKeyCryptoKey,
     };
 
     setUser(finalUser);
-    return { success: true };
+    return { success: true, user: finalUser };
+  }
+
+  async function requestTotpSetup(label) {
+    const body = label ? { label } : {};
+    return apiRequest("/auth/totp/setup", {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+  }
+
+  async function confirmTotpSetup(token) {
+    return apiRequest("/auth/totp/setup", {
+      method: "POST",
+      body: JSON.stringify({ token }),
+    });
   }
 
   async function logout() {
@@ -106,7 +128,16 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, registerUser }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        login,
+        logout,
+        registerUser,
+        requestTotpSetup,
+        confirmTotpSetup,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -115,4 +146,3 @@ export function AuthProvider({ children }) {
 export function useAuth() {
   return useContext(AuthContext);
 }
-

@@ -464,6 +464,20 @@ input:focus {
   box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.25);
 }
 
+select {
+  border-radius: 0.75rem;
+  border: 1px solid var(--gray-300);
+  padding: 0.75rem;
+  width: 100%;
+  background-color: #ffffff;
+}
+
+select:focus {
+  outline: none;
+  border-color: var(--indigo-400);
+  box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.25);
+}
+
 .outline-none {
   outline: none;
 }
@@ -544,4 +558,18 @@ table tr:last-child td {
 
 .text-sm strong {
   font-weight: 600;
+}
+
+.manual-code {
+  display: block;
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background-color: #ffffff;
+  border: 1px solid var(--indigo-100);
+  border-radius: 0.5rem;
+  font-family: "Source Code Pro", Menlo, Monaco, Consolas, "Courier New", monospace;
+  font-size: 0.75rem;
+  color: var(--indigo-700);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }

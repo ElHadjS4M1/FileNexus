@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { authenticate, requireRole } from '../middleware/auth';
-import { createPendingUser } from '../services/userService';
+import { createPendingUser, listUsers } from '../services/userService';
 
 const createUserSchema = z.object({
   username: z.string().min(3).max(32),
@@ -16,6 +16,20 @@ export const adminRouter = Router();
  * @returns {void}
  */
 const register = (): void => {
+  adminRouter.get(
+    '/users',
+    authenticate,
+    requireRole(['admin']),
+    async (_req, res, next) => {
+      try {
+        const users = await listUsers();
+        res.json({ users });
+      } catch (error) {
+        next(error);
+      }
+    },
+  );
+
   adminRouter.post(
     '/users',
     authenticate,

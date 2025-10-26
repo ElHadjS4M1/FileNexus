@@ -1,9 +1,9 @@
-# Puesta en marcha rápida
+# Puesta en marcha
 
 ## 1. Requisitos previos
 
 - Node.js 20 o superior (incluye npm)
-- PostgreSQL 14 o superior accesible como `postgresql://user:pass@localhost:5432/protectinfo`
+- PostgreSQL 14 o superior accesible como `postgresql://user:pass@localhost:5433/protectinfo`
 - OpenSSL (para generar las claves si aún no existen)
 
 ⚠️ Importa el certificado `server/config/dev-tls.crt` en el sistema o navegador para evitar avisos HTTPS durante el desarrollo.

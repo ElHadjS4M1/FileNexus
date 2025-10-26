@@ -3,7 +3,7 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import FirstLoginChangePassword from "./components/RegistroInicial";
-import FileCryptoDemo from "./components/FileEncryptorDemo";
+import Dashboard from "./components/Dashboard";
 
 export default function App() {
   return (
@@ -11,7 +11,8 @@ export default function App() {
       <Router>
         <Routes>
           <Route path="/" element={<FirstLoginChangePassword />} />
-          <Route path="/file-crypto" element={<FileCryptoDemo />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/file-crypto" element={<Dashboard />} />
         </Routes>
       </Router>
     </AuthProvider>

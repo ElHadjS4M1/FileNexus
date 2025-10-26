@@ -66,7 +66,7 @@ const ShieldIcon = ({ size = 24, className = "" }) => (
 );
 
 export default function FileCryptoDemo() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [file, setFile] = useState(null);
   const [message, setMessage] = useState("");
   const [working, setWorking] = useState(false);
@@ -192,12 +192,25 @@ export default function FileCryptoDemo() {
     }
   };
 
+  const handleLogout = () => {
+    void logout().catch(() => undefined);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col items-center p-10">
       <div className="max-w-4xl w-full bg-white rounded-3xl shadow-2xl p-8 border border-indigo-100 space-y-8">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-800">Mi Boveda de Documentos</h1>
-          <ShieldIcon className="text-indigo-600" size={32} />
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-3">
+            <ShieldIcon className="text-indigo-600" size={32} />
+            <h1 className="text-2xl font-bold text-gray-800">Mi Boveda de Documentos</h1>
+          </div>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="px-4 py-2 rounded-xl border border-indigo-200 text-indigo-600 font-semibold hover:bg-indigo-50 transition"
+          >
+            Cerrar sesion
+          </button>
         </div>
 
         {user && (

@@ -40,6 +40,24 @@ export const createPendingUser = async (data: {
 };
 
 /**
+ * Returns a list of users without sensitive materials.
+ * @returns {Promise<Array<Pick<User, 'id' | 'username' | 'role' | 'status' | 'createdAt'>>>} Sanitized users.
+ */
+export const listUsers = (): Promise<
+  Array<Pick<User, 'id' | 'username' | 'role' | 'status' | 'createdAt'>>
+> =>
+  prisma.user.findMany({
+    orderBy: { createdAt: 'asc' },
+    select: {
+      id: true,
+      username: true,
+      role: true,
+      status: true,
+      createdAt: true,
+    },
+  });
+
+/**
  * Fetches a user by username including sensitive fields for authentication flows.
  * @param {string} username - Login identifier.
  * @returns {Promise<User | null>} Matching user or null.
