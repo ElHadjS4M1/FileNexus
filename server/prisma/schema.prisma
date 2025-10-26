@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  admin
+  dept_head
+  project_head
+  user
+}
+
+enum UserStatus {
+  pending_init
+  active
+}
+
+model User {
+  id            String     @id @default(uuid())
+  username      String     @unique
+  role          UserRole
+  pwdHash       String
+  status        UserStatus @default(pending_init)
+  publicKeyJwk  Json
+  privEnc       Bytes
+  privNonce     Bytes
+  clientSalt    Bytes
+  kdfClient     Json
+  totpSecretEnc Bytes?
+  totpEnabled   Boolean    @default(false)
+  createdAt     DateTime   @default(now())
+  files         File[]
+}
+
+model File {
+  id         String   @id @default(uuid())
+  ownerId    String
+  owner      User     @relation(fields: [ownerId], references: [id])
+  filename   String
+  sizeBytes  Int
+  meta       Json?
+  aeadNonce  Bytes
+  ekOwner    Bytes
+  hashC      Bytes?
+  filePath   String
+  createdAt  DateTime @default(now())
+
+  @@index([ownerId])
+}

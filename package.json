@@ -1,0 +1,16 @@
+{
+  "name": "protectinfo-monorepo",
+  "private": true,
+  "workspaces": [
+    "server",
+    "client",
+    "client"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "dev": "concurrently \"npm run dev --workspace server\" \"npm run start --workspace client\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
