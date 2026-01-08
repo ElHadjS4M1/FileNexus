@@ -7,8 +7,8 @@ import { logger } from './logger';
 import { registerRoutes } from './routes';
 
 /**
- * Configures and returns an Express application instance.
- * @returns {express.Express} Fully wired Express app.
+ * Configura y devuelve una instancia de aplicación de Express.
+ * @returns {express.Express} Aplicación de Express completamente integrada.
  */
 export const createApp = (): express.Express => {
   const app = express();

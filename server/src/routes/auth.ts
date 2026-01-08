@@ -56,9 +56,9 @@ const AUTH_COOKIE = 'token';
 export const authRouter = Router();
 
 /**
- * Decodes a base64 string into a Buffer.
- * @param {string} value - Base64 encoded payload.
- * @returns {Buffer} Decoded buffer.
+ * Descodifica una cadena base64 en un búfer.
+ * @param {string} value - Carga codificada en base64.
+ * @returns {Buffer} Búfer decodificado.
  */
 const b64 = (value: string): Buffer => Buffer.from(value, 'base64');
 

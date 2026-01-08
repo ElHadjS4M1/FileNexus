@@ -5,8 +5,8 @@ import { filesRouter } from './files';
 import { meRouter } from './me';
 
 /**
- * Registers all HTTP routes on the provided application instance.
- * @param {Express} app - Express app reference.
+ * Registra todas las rutas HTTP en la instancia de aplicación proporcionada.
+ * @param {Express} app - Referencia a la aplicación de Express.
  * @returns {void}
  */
 export const registerRoutes = (app: Express): void => {

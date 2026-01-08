@@ -10,18 +10,10 @@ const ARGON2_OPTIONS: argon2.Options & { type: argon2.ArgonType } = {
 };
 
 /**
- * Derives an Argon2id hash that protects the provided password value.
- * @param {string} password - Raw password string.
- * @returns {Promise<string>} Encoded Argon2 hash string.
- */
-export const hashPassword = async (password: string): Promise<string> =>
-  argon2.hash(password, ARGON2_OPTIONS);
-
-/**
- * Validates a password against a stored Argon2 hash.
- * @param {string} password - Password supplied by the user.
- * @param {string} hash - Stored Argon2 hash.
- * @returns {Promise<boolean>} Whether the password matches.
+ * Valida una contraseña frente a un hash Argon2 almacenado.
+ * @param {string} password - Contraseña aportada por el usuario.
+ * @param {string} hash - Hash Argon2 almacenado.
+ * @returns {Promise<boolean>} Indica si la contraseña coincide.
  */
 export const verifyPassword = async (password: string, hash: string): Promise<boolean> =>
   argon2.verify(hash, password, ARGON2_OPTIONS);

@@ -1,15 +1,15 @@
 /**
- * Represents an HTTP-aware error carrying a status code and optional payload.
+ * Representa un error consciente de HTTP que transporta un código de estado y una carga opcional.
  */
 export class HttpError extends Error {
   public readonly statusCode: number;
   public readonly details?: Record<string, unknown>;
 
   /**
-   * Builds a new HttpError instance.
-   * @param {number} statusCode - HTTP status code to propagate.
-   * @param {string} message - Human readable error description.
-   * @param {Record<string, unknown>} [details] - Additional metadata for logs.
+   * Construye una nueva instancia de HttpError.
+   * @param {number} statusCode - Código de estado HTTP que se propagará.
+   * @param {string} message - Descripción del error legible.
+   * @param {Record<string, unknown>} [details] - Metadatos adicionales para los registros.
    */
   constructor(statusCode: number, message: string, details?: Record<string, unknown>) {
     super(message);

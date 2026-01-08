@@ -20,8 +20,8 @@ let cachedKeys: JwtKeys | null = null;
 let cachedKek: Buffer | null = null;
 
 /**
- * Loads the JWT key pair either from disk or generates an ephemeral pair for development/testing.
- * @returns {JwtKeys} Loaded or generated RSA key pair in PEM and KeyObject formats.
+ * Carga el par de claves JWT desde disco o genera un par efímero para desarrollo/pruebas.
+ * @returns {JwtKeys} Par de claves RSA cargado o generado en formatos PEM y KeyObject.
  */
 export const loadJwtKeys = (): JwtKeys => {
   if (cachedKeys) {
@@ -52,8 +52,8 @@ export const loadJwtKeys = (): JwtKeys => {
 };
 
 /**
- * Derives the symmetric Key Encryption Key (KEK) used to wrap TOTP secrets.
- * @returns {Buffer} 32-byte buffer ready for AES-256 operations.
+ * Deriva la clave simétrica KEK utilizada para proteger los secretos TOTP.
+ * @returns {Buffer} Búfer de 32 bytes listo para operaciones AES-256.
  */
 export const getServerKek = (): Buffer => {
   if (cachedKek) {
@@ -66,7 +66,7 @@ export const getServerKek = (): Buffer => {
 };
 
 /**
- * Generates a random nonce compatible with AES-GCM 96-bit requirement.
- * @returns {Buffer} 12-byte random nonce buffer.
+ * Genera un nonce aleatorio compatible con el requisito de 96 bits de AES-GCM.
+ * @returns {Buffer} Búfer de nonce aleatorio de 12 bytes.
  */
 export const generateNonce = (): Buffer => randomBytes(12);

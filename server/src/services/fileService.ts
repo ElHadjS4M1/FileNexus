@@ -14,9 +14,9 @@ export type FileCreateInput = {
 };
 
 /**
- * Stores an encrypted file payload for a user.
- * @param {FileCreateInput} payload - Encrypted envelope contents.
- * @returns {Promise<File>} Newly created file entry.
+ * Almacena un archivo cifrado para un usuario.
+ * @param {FileCreateInput} payload - Contenido cifrado del sobre.
+ * @returns {Promise<File>} Registro de archivo recién creado.
  */
 export const saveFile = (payload: FileCreateInput): Promise<File> =>
   prisma.file.create({
@@ -34,18 +34,18 @@ export const saveFile = (payload: FileCreateInput): Promise<File> =>
   });
 
 /**
- * Retrieves a file by id ensuring it belongs to the expected owner.
- * @param {string} id - File identifier.
- * @param {string} ownerId - Expected owner id.
- * @returns {Promise<File | null>} File when found and owned by caller.
+ * Recupera un archivo por su identificador asegurando que pertenezca al propietario esperado.
+ * @param {string} id - Identificador del archivo.
+ * @param {string} ownerId - Identificador del propietario esperado.
+ * @returns {Promise<File | null>} Archivo cuando existe y pertenece al solicitante.
  */
 export const getFileForOwner = (id: string, ownerId: string): Promise<File | null> =>
   prisma.file.findFirst({ where: { id, ownerId } });
 
 /**
- * Lists the files visible to a particular owner.
- * @param {string} ownerId - Owner id.
- * @returns {Promise<File[]>} Collection of files.
+ * Lista los archivos visibles para un propietario determinado.
+ * @param {string} ownerId - Identificador del propietario.
+ * @returns {Promise<File[]>} Colección de archivos.
  */
 export const listFilesByOwner = (ownerId: string): Promise<File[]> =>
   prisma.file.findMany({

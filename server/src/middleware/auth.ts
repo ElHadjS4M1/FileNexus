@@ -5,10 +5,10 @@ import { HttpError } from '../utils/httpError';
 const AUTH_COOKIE = 'token';
 
 /**
- * Middleware that authenticates requests using the HttpOnly JWT cookie.
- * @param {Request} req - Express request.
- * @param {Response} _res - Express response.
- * @param {NextFunction} next - Next middleware function.
+ * Middleware que autentica las solicitudes usando la cookie JWT con la bandera HttpOnly.
+ * @param {Request} req - Solicitud de Express.
+ * @param {Response} _res - Respuesta de Express.
+ * @param {NextFunction} next - Siguiente función middleware.
  * @returns {void}
  */
 export const authenticate = (req: Request, _res: Response, next: NextFunction): void => {
@@ -27,9 +27,9 @@ export const authenticate = (req: Request, _res: Response, next: NextFunction): 
 };
 
 /**
- * Factory that enforces role-based access control for specific endpoints.
- * @param {string[]} allowedRoles - Roles permitted to reach the handler.
- * @returns {(req: Request, res: Response, next: NextFunction) => void} Express middleware.
+ * Fábrica que aplica control de acceso basado en roles para endpoints específicos.
+ * @param {string[]} allowedRoles - Roles permitidos para alcanzar el manejador.
+ * @returns {(req: Request, res: Response, next: NextFunction) => void} Middleware de Express.
  */
 export const requireRole =
   (allowedRoles: string[]) => (req: Request, _res: Response, next: NextFunction): void => {

@@ -3,8 +3,8 @@ import '../src/config/env';
 import { hashPassword } from '../src/utils/password';
 
 /**
- * Seeds the database with a default admin user if none exists.
- * @returns {Promise<void>} Resolves once seed completes.
+ * Inicializa la base de datos con un usuario administrador por defecto si no existe.
+ * @returns {Promise<void>} Se resuelve cuando finaliza la siembra.
  */
 const seed = async (): Promise<void> => {
   const seedUsers = [

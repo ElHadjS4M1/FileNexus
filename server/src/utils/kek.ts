@@ -5,9 +5,9 @@ const AUTH_TAG_LENGTH = 16;
 const NONCE_LENGTH = 12;
 
 /**
- * Encrypts arbitrary data using the server KEK via AES-256-GCM.
- * @param {Buffer} plaintext - Raw bytes that must be wrapped.
- * @returns {Buffer} Concatenation of nonce + ciphertext + authTag.
+ * Cifra datos arbitrarios utilizando la KEK del servidor mediante AES-256-GCM.
+ * @param {Buffer} plaintext - Bytes en bruto que deben ser protegidos.
+ * @returns {Buffer} Concatenación de nonce + ciphertext + authTag.
  */
 export const encryptWithKek = (plaintext: Buffer): Buffer => {
   const key = getServerKek();
@@ -19,9 +19,9 @@ export const encryptWithKek = (plaintext: Buffer): Buffer => {
 };
 
 /**
- * Decrypts payloads previously produced by encryptWithKek.
- * @param {Buffer} payload - Combined nonce + ciphertext + authTag buffer.
- * @returns {Buffer} Decrypted bytes.
+ * Descifra cargas previamente generadas por encryptWithKek.
+ * @param {Buffer} payload - Búfer que combina nonce + ciphertext + authTag.
+ * @returns {Buffer} Bytes descifrados.
  */
 export const decryptWithKek = (payload: Buffer): Buffer => {
   const key = getServerKek();

@@ -18,8 +18,8 @@ const allowedOrigins = appEnv.CORS_ALLOWED_ORIGINS
   : defaultOrigins;
 
 /**
- * Builds the CORS middleware enforcing a small allowlist.
- * @returns {RequestHandler} Configured CORS middleware instance.
+ * Construye el middleware CORS aplicando una lista de permitidos reducida.
+ * @returns {RequestHandler} Instancia del middleware CORS configurado.
  */
 export const buildCors = (): RequestHandler =>
   cors({
@@ -34,8 +34,8 @@ export const buildCors = (): RequestHandler =>
   });
 
 /**
- * Creates the application-wide rate limiter.
- * @returns {RequestHandler} Rate-limit middleware.
+ * Crea el limitador de peticiones global de la aplicación.
+ * @returns {RequestHandler} Middleware de rate limiting.
  */
 export const buildRateLimiter = (): RequestHandler =>
   rateLimit({
@@ -46,8 +46,8 @@ export const buildRateLimiter = (): RequestHandler =>
   }) as unknown as RequestHandler;
 
 /**
- * Provides the security headers configuration via helmet.
- * @returns {RequestHandler} Helmet middleware.
+ * Proporciona la configuración de cabeceras de seguridad mediante helmet.
+ * @returns {RequestHandler} Middleware de helmet.
  */
 export const buildHelmet = (): RequestHandler =>
   helmet({

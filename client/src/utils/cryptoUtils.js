@@ -25,22 +25,8 @@ export function base64ToArrayBuffer(base64) {
   return bytes.buffer;
 }
 
-export function base64ToBytes(b64) {
-  const binary = atob(b64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  return bytes;
-}
-
 export function toHex(u8) {
   return Array.from(u8).map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
-// --- DERIVACIÓN DE CLAVES ---
-export async function deriveHalfHashFromPassword(password) {
-  const hash = await sha256Bytes(password);
-  const [, secondHalf] = splitInHalf(hash);
-  return secondHalf;
 }
 
 export async function hkdfExpandToAes256(keyMaterialBytes, info, salt) {
@@ -123,28 +109,6 @@ export async function encryptPrivateKeyWithAesGcm(aesKey, base64Pkcs8) {
     ciphertextBase64: arrayBufferToBase64(ciphertext),
     ivBase64: arrayBufferToBase64(iv.buffer),
   };
-}
-
-export async function decryptPrivateKeyWithPassword(encryptedBase64, ivBase64, saltBase64, keyMaterialBytes) {
-  try {
-    const iv = base64ToBytes(ivBase64);
-    const salt = base64ToBytes(saltBase64);
-    const info = new TextEncoder().encode("private-key-encryption");
-    const ikm = await crypto.subtle.importKey("raw", keyMaterialBytes, "HKDF", false, ["deriveKey"]);
-    const aesKey = await crypto.subtle.deriveKey(
-      { name: "HKDF", hash: "SHA-256", salt, info },
-      ikm,
-      { name: "AES-GCM", length: 256 },
-      true,
-      ["decrypt"]
-    );
-    const ciphertext = base64ToBytes(encryptedBase64);
-    const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, aesKey, ciphertext);
-    return arrayBufferToBase64(decrypted);
-  } catch (err) {
-    console.error("Error descifrando la clave privada:", err);
-    return null;
-  }
 }
 
 export async function decryptPrivateKeyAesGcm(aesKey, encryptedBase64, ivBase64) {

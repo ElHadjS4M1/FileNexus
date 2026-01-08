@@ -1,5 +1,5 @@
 // src/utils/cryptoPasswordUtils.js
-// Decrypts a private key encrypted with AES-GCM + HKDF from password (from FRONT-001 scheme)
+// Descifra una clave privada cifrada con AES-GCM + HKDF a partir de la contraseña (esquema FRONT-001)
 
 function base64ToArrayBuffer(b64) {
   const bin = window.atob(b64);
@@ -40,5 +40,5 @@ export async function decryptPrivateKeyWithPassword(
   const encrypted = base64ToArrayBuffer(encryptedPrivateKeyBase64);
   const decrypted = await window.crypto.subtle.decrypt({ name: "AES-GCM", iv }, aesKey, encrypted);
 
-  return arrayBufferToBase64(decrypted); // PKCS8 base64 private key
+  return arrayBufferToBase64(decrypted); // Clave privada PKCS8 en base64
 }

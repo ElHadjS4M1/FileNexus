@@ -12,7 +12,7 @@ const createUserSchema = z.object({
 export const adminRouter = Router();
 
 /**
- * Registers the admin POST /admin/users route.
+ * Registra la ruta de administración POST /admin/users.
  * @returns {void}
  */
 const register = (): void => {

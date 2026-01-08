@@ -31,9 +31,9 @@ const upload = multer({
 });
 
 /**
- * Converts base64 encoded payloads into binary buffers.
- * @param {string | undefined} value - Base64 encoded string.
- * @returns {Buffer | undefined} Decoded buffer.
+ * Convierte cargas codificadas en base64 en búferes binarios.
+ * @param {string | undefined} value - Cadena codificada en base64.
+ * @returns {Buffer | undefined} Búfer decodificado.
  */
 const b64 = (value: string | undefined): Buffer | undefined =>
   value ? Buffer.from(value, 'base64') : undefined;

@@ -7,7 +7,7 @@ import { logger } from './logger';
 import { registerPrismaShutdown } from './services/prisma';
 
 /**
- * Boots the HTTP(S) server with the configured options.
+ * Inicia el servidor HTTP(S) con las opciones configuradas.
  * @returns {void}
  */
 const start = (): void => {

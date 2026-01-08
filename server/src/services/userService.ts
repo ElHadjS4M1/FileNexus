@@ -15,9 +15,9 @@ export type InitPayload = {
 };
 
 /**
- * Creates a pending user with a temporary password provided by an administrator.
- * @param {{ username: string; role: UserRole; password: string }} data - Account definition.
- * @returns {Promise<User>} Newly created user entity.
+ * Crea un usuario pendiente con una contraseña temporal proporcionada por un administrador.
+ * @param {{ username: string; role: UserRole; password: string }} data - Definición de la cuenta.
+ * @returns {Promise<User>} Entidad de usuario recién creada.
  */
 export const createPendingUser = async (data: {
   username: string;
@@ -40,8 +40,8 @@ export const createPendingUser = async (data: {
 };
 
 /**
- * Returns a list of users without sensitive materials.
- * @returns {Promise<Array<Pick<User, 'id' | 'username' | 'role' | 'status' | 'createdAt'>>>} Sanitized users.
+ * Devuelve una lista de usuarios sin materiales sensibles.
+ * @returns {Promise<Array<Pick<User, 'id' | 'username' | 'role' | 'status' | 'createdAt'>>>} Usuarios saneados.
  */
 export const listUsers = (): Promise<
   Array<Pick<User, 'id' | 'username' | 'role' | 'status' | 'createdAt'>>
@@ -58,26 +58,26 @@ export const listUsers = (): Promise<
   });
 
 /**
- * Fetches a user by username including sensitive fields for authentication flows.
- * @param {string} username - Login identifier.
- * @returns {Promise<User | null>} Matching user or null.
+ * Obtiene un usuario por nombre, incluyendo campos sensibles para los flujos de autenticación.
+ * @param {string} username - Identificador de inicio de sesión.
+ * @returns {Promise<User | null>} Usuario coincidente o null.
  */
 export const findUserByUsername = (username: string): Promise<User | null> =>
   prisma.user.findUnique({ where: { username } });
 
 /**
- * Fetches a user by id.
- * @param {string} id - User identifier.
- * @returns {Promise<User | null>} Matching user or null.
+ * Obtiene un usuario por su identificador.
+ * @param {string} id - Identificador del usuario.
+ * @returns {Promise<User | null>} Usuario coincidente o null.
  */
 export const findUserById = (id: string): Promise<User | null> =>
   prisma.user.findUnique({ where: { id } });
 
 /**
- * Applies first-login initialization materials and updates user status to active.
- * @param {string} userId - User identifier.
- * @param {InitPayload} payload - New password and cryptographic artifacts.
- * @returns {Promise<User>} Updated user entity.
+ * Aplica los materiales de inicialización del primer acceso y actualiza el estado del usuario a activo.
+ * @param {string} userId - Identificador del usuario.
+ * @param {InitPayload} payload - Nueva contraseña y artefactos criptográficos.
+ * @returns {Promise<User>} Entidad de usuario actualizada.
  */
 export const completeInitialization = async (
   userId: string,
@@ -106,11 +106,11 @@ export const completeInitialization = async (
 };
 
 /**
- * Persists encrypted TOTP secret material for a user.
- * @param {string} userId - User identifier.
- * @param {Buffer} secretWrapped - Encrypted TOTP secret.
- * @param {boolean} enabled - Whether 2FA is already activated.
- * @returns {Promise<User>} Updated user entity.
+ * Persiste el secreto TOTP cifrado de un usuario.
+ * @param {string} userId - Identificador del usuario.
+ * @param {Buffer} secretWrapped - Secreto TOTP cifrado.
+ * @param {boolean} enabled - Indica si el 2FA ya está activado.
+ * @returns {Promise<User>} Entidad de usuario actualizada.
  */
 export const setTotpSecret = (
   userId: string,
@@ -123,9 +123,9 @@ export const setTotpSecret = (
   });
 
 /**
- * Marks 2FA as enabled once the user validates their token.
- * @param {string} userId - User identifier.
- * @returns {Promise<User>} Updated user entity.
+ * Marca el 2FA como habilitado cuando el usuario valida su token.
+ * @param {string} userId - Identificador del usuario.
+ * @returns {Promise<User>} Entidad de usuario actualizada.
  */
 export const enableTotp = (userId: string): Promise<User> =>
   prisma.user.update({

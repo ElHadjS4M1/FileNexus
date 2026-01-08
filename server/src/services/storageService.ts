@@ -11,10 +11,10 @@ export type StoredFile = {
 };
 
 /**
- * Persists encrypted file bytes on disk inside ./files/<username> directory.
- * @param {string} username - Owner username to scope storage path.
- * @param {Buffer} ciphertext - Encrypted file bytes.
- * @returns {Promise<StoredFile>} Stored file metadata including generated id and paths.
+ * Persiste bytes de archivos cifrados en disco dentro del directorio ./files/<username>.
+ * @param {string} username - Nombre de usuario del propietario para acotar la ruta de almacenamiento.
+ * @param {Buffer} ciphertext - Bytes cifrados del archivo.
+ * @returns {Promise<StoredFile>} Metadatos del archivo almacenado, incluido el id generado y las rutas.
  */
 export const writeCipherFile = async (
   username: string,
@@ -33,10 +33,10 @@ export const writeCipherFile = async (
 };
 
 /**
- * Moves an encrypted file residing in a temporary path into the managed storage tree.
- * @param {string} username - Owner username.
- * @param {string} tempPath - Absolute path to the temporary file.
- * @returns {Promise<StoredFile>} Stored file metadata including generated id and paths.
+ * Mueve un archivo cifrado que reside en una ruta temporal hacia el árbol de almacenamiento gestionado.
+ * @param {string} username - Nombre de usuario del propietario.
+ * @param {string} tempPath - Ruta absoluta al archivo temporal.
+ * @returns {Promise<StoredFile>} Metadatos del archivo almacenado, incluido el id generado y las rutas.
  */
 export const writeCipherFileFromPath = async (
   username: string,
@@ -55,9 +55,9 @@ export const writeCipherFileFromPath = async (
 };
 
 /**
- * Reads encrypted bytes from disk using the stored relative path.
- * @param {string} relativePath - Relative path stored in database.
- * @returns {Promise<Buffer>} File contents.
+ * Lee bytes cifrados desde disco usando la ruta relativa almacenada.
+ * @param {string} relativePath - Ruta relativa guardada en la base de datos.
+ * @returns {Promise<Buffer>} Contenido del archivo.
  */
 export const readCipherFile = async (relativePath: string): Promise<Buffer> => {
   const absolutePath = resolve(BASE_DIR, relativePath);

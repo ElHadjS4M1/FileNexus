@@ -4,7 +4,7 @@ import { logger } from '../logger';
 export const prisma = new PrismaClient();
 
 /**
- * Hooks Prisma lifecycle to ensure graceful shutdown and log helpful context.
+ * Conecta el ciclo de vida de Prisma para garantizar un apagado ordenado y registrar información útil.
  * @returns {void}
  */
 export const registerPrismaShutdown = (): void => {

@@ -73,7 +73,7 @@ router.get('/keys/materials', async (req, res, next) => {
         hkdfInfo: kdfInfo ?? null,
       },
       publicKeyPem,
-      // legacy fields for backwards compatibility
+      // Campos heredados para mantener la compatibilidad
       privEnc: user.privEnc.toString('base64'),
       privNonce: user.privNonce.toString('base64'),
       clientSalt: user.clientSalt.toString('base64'),

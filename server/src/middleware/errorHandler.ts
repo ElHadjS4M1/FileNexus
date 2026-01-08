@@ -3,11 +3,11 @@ import { logger } from '../logger';
 import { HttpError } from '../utils/httpError';
 
 /**
- * Centralized error handler that translates thrown errors into sanitized responses.
- * @param {Error} err - Captured error.
- * @param {Request} _req - Express request.
- * @param {Response} res - Express response.
- * @param {NextFunction} next - Express next handler.
+ * Manejador de errores centralizado que traduce las excepciones en respuestas saneadas.
+ * @param {Error} err - Error capturado.
+ * @param {Request} _req - Solicitud de Express.
+ * @param {Response} res - Respuesta de Express.
+ * @param {NextFunction} next - Siguiente manejador de Express.
  * @returns {void}
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
