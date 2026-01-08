@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { useAuth, API_BASE } from "../context/AuthContext";
+import { useAuth } from "../context/AuthContext";
+import { API_BASE } from "../api/auth.api";
 import {
   encryptFileWithAesGcm,
   exportAesKeyRawBase64,

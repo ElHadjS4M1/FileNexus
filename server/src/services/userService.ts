@@ -1,17 +1,18 @@
 import type { User, UserRole } from '@prisma/client';
 import { prisma } from './prisma';
 import { hashPassword } from '../utils/password';
+import type { JsonObject } from '@prisma/client/runtime/library';
 
 const EMPTY_BUFFER = Buffer.alloc(0);
 
 export type InitPayload = {
   passwordNew: string;
-  publicKeyJwk: unknown;
+  publicKeyJwk: JsonObject;
   publicKeyPem?: string;
   privEnc: Buffer;
   privNonce: Buffer;
   clientSalt: Buffer;
-  kdfClient: unknown;
+  kdfClient: JsonObject;
 };
 
 /**
@@ -87,9 +88,9 @@ export const completeInitialization = async (
   const publicKeyData =
     typeof payload.publicKeyJwk === 'object' && payload.publicKeyJwk !== null
       ? {
-          ...payload.publicKeyJwk,
-          ...(payload.publicKeyPem ? { pem: payload.publicKeyPem } : {}),
-        }
+        ...payload.publicKeyJwk,
+        ...(payload.publicKeyPem ? { pem: payload.publicKeyPem } : {}),
+      }
       : payload.publicKeyJwk;
   return prisma.user.update({
     where: { id: userId },

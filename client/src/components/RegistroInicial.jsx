@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { generateAndEncryptRSAKeys } from "../utils/cryptoUtils";
 import { useAuth } from "../context/AuthContext";
 import QRCode from "qrcode";
+import { Input, Button, Modal } from "./ui";
 
 function LogInIcon({ size = 24, className = "" }) {
   return (
@@ -50,7 +51,6 @@ export default function FirstLoginChangePassword() {
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [isFirstLogin, setIsFirstLogin] = useState(false);
   const [showChangeModal, setShowChangeModal] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -87,7 +87,6 @@ export default function FirstLoginChangePassword() {
     try {
       const result = await login(username, password);
       if (result?.requiresInit) {
-        setIsFirstLogin(true);
         setInitToken(result.initToken);
         setShowChangeModal(true);
         return;
@@ -110,7 +109,7 @@ export default function FirstLoginChangePassword() {
           } catch (setupError) {
             setStatusMessage(
               setupError.message ??
-                "No se pudo iniciar la configuracion TOTP. Intenta iniciar sesion de nuevo.",
+              "No se pudo iniciar la configuracion TOTP. Intenta iniciar sesion de nuevo.",
             );
           }
           return;
@@ -160,7 +159,7 @@ export default function FirstLoginChangePassword() {
         } catch (setupError) {
           setStatusMessage(
             setupError.message ??
-              "No se pudo iniciar la configuracion TOTP. Intenta iniciar sesion de nuevo.",
+            "No se pudo iniciar la configuracion TOTP. Intenta iniciar sesion de nuevo.",
           );
         }
         return;
@@ -257,226 +256,190 @@ export default function FirstLoginChangePassword() {
 
         <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">Acceso Seguro</h2>
         <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-600">Usuario</label>
-            <input
-              value={username}
-              onChange={(event) => setUsername(event.target.value)}
-              className="mt-1 w-full p-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 outline-none"
-              placeholder="usuario@correo.com"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-600">Contrasena</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              className="mt-1 w-full p-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 outline-none"
-              placeholder="********"
-              required
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Usa tu contrasena temporal si es tu primer acceso.
-            </p>
-          </div>
-          <button
-            type="submit"
-            disabled={processing}
-            className="w-full py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition disabled:opacity-60"
-          >
+          <Input
+            label="Usuario"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="usuario@correo.com"
+            required
+          />
+          <Input
+            label="Contrasena"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="********"
+            required
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            Usa tu contrasena temporal si es tu primer acceso.
+          </p>
+          <Button type="submit" processing={processing} className="bg-indigo-600 text-white hover:bg-indigo-700">
             {processing ? "Procesando..." : "Entrar"}
-          </button>
+          </Button>
         </form>
         {statusMessage && (
           <p className="mt-4 text-center text-sm text-red-600">{statusMessage}</p>
         )}
 
-        {showChangeModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="w-full max-w-lg bg-white rounded-2xl p-8 shadow-2xl">
-              <div className="flex items-center mb-4 gap-3">
-                <LockIcon className="text-indigo-600" size={24} />
-                <h3 className="text-lg font-semibold text-gray-800">
-                  Primer acceso - Cambia tu contrasena
-                </h3>
-              </div>
-              <form onSubmit={handleChangePasswordSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-600">Nueva contrasena</label>
-                  <input
-                    type="password"
-                    value={newPassword}
-                    onChange={(event) => setNewPassword(event.target.value)}
-                    className="mt-1 w-full p-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 outline-none"
-                    placeholder="Nueva contrasena segura"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-600">Confirmar contrasena</label>
-                  <input
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(event) => setConfirmPassword(event.target.value)}
-                    className="mt-1 w-full p-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 outline-none"
-                    placeholder="Repite la contrasena"
-                    required
-                  />
-                </div>
-                {validationErrors.length > 0 && (
-                  <ul className="text-sm text-red-600 list-disc pl-5">
-                    {validationErrors.map((err, index) => (
-                      <li key={index}>{err}</li>
-                    ))}
-                  </ul>
-                )}
-                <div className="flex justify-end gap-3 mt-4">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowChangeModal(false);
-                      setInitToken(null);
-                    }}
-                    className="px-4 py-2 rounded-lg border text-gray-700 hover:bg-gray-100 transition"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={processing}
-                    className="px-4 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition disabled:opacity-60"
-                  >
-                    {processing ? "Generando..." : "Confirmar"}
-                  </button>
-                </div>
-              </form>
-            </div>
+        <Modal isOpen={showChangeModal} onClose={() => { }}>
+          <div className="flex items-center mb-4 gap-3">
+            <LockIcon className="text-indigo-600" size={24} />
+            <h3 className="text-lg font-semibold text-gray-800">
+              Primer acceso - Cambia tu contrasena
+            </h3>
           </div>
-        )}
+          <form onSubmit={handleChangePasswordSubmit} className="space-y-4">
+            <Input
+              label="Nueva contrasena"
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="Nueva contrasena segura"
+              required
+            />
+            <Input
+              label="Confirmar contrasena"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Repite la contrasena"
+              required
+            />
+            {validationErrors.length > 0 && (
+              <ul className="text-sm text-red-600 list-disc pl-5">
+                {validationErrors.map((err, index) => (
+                  <li key={index}>{err}</li>
+                ))}
+              </ul>
+            )}
+            <div className="flex justify-end gap-3 mt-4">
+              <Button
+                type="button"
+                onClick={() => {
+                  setShowChangeModal(false);
+                  setInitToken(null);
+                }}
+                className="bg-white border text-gray-700 hover:bg-gray-100"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                processing={processing}
+                className="bg-indigo-600 text-white hover:bg-indigo-700"
+              >
+                {processing ? "Generando..." : "Confirmar"}
+              </Button>
+            </div>
+          </form>
+        </Modal>
 
-        {needsTotp && (
-          <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/50">
-            <div className="w-full max-w-sm bg-white rounded-2xl p-6 shadow-2xl space-y-4">
-              <div className="flex items-center gap-3">
-                <LockIcon className="text-indigo-600" size={24} />
-                <h3 className="text-lg font-semibold text-gray-800">Verificacion TOTP</h3>
-              </div>
-              <form onSubmit={handleTotpSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-600">
-                    Introduce el codigo de tu app autenticadora
-                  </label>
-                  <input
-                    value={totpValue}
-                    onChange={(event) => setTotpValue(event.target.value.replace(/\D/g, "").slice(0, 6))}
-                    inputMode="numeric"
-                    maxLength={6}
-                    placeholder="000000"
-                    required
-                  />
-                </div>
-                <div className="flex justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setNeedsTotp(false);
-                      setTotpValue("");
-                    }}
-                    className="px-4 py-2 rounded-lg border text-gray-700 hover:bg-gray-100 transition"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={processing}
-                    className="px-4 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition disabled:opacity-60"
-                  >
-                    {processing ? "Verificando..." : "Validar TOTP"}
-                  </button>
-                </div>
-              </form>
-            </div>
+        <Modal isOpen={needsTotp} onClose={() => setNeedsTotp(false)}>
+          <div className="flex items-center gap-3 mb-4">
+            <LockIcon className="text-indigo-600" size={24} />
+            <h3 className="text-lg font-semibold text-gray-800">Verificacion TOTP</h3>
           </div>
-        )}
+          <form onSubmit={handleTotpSubmit} className="space-y-4">
+            <Input
+              label="Introduce el codigo de tu app autenticadora"
+              value={totpValue}
+              onChange={(e) => setTotpValue(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              inputMode="numeric"
+              maxLength={6}
+              placeholder="000000"
+              required
+            />
+            <div className="flex justify-end gap-3">
+              <Button
+                type="button"
+                onClick={() => {
+                  setNeedsTotp(false);
+                  setTotpValue("");
+                }}
+                className="bg-white border text-gray-700 hover:bg-gray-100"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                processing={processing}
+                className="bg-indigo-600 text-white hover:bg-indigo-700"
+              >
+                {processing ? "Verificando..." : "Validar TOTP"}
+              </Button>
+            </div>
+          </form>
+        </Modal>
 
-        {showTotpSetup && (
-          <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 px-4">
-            <div className="w-full max-w-3xl bg-white rounded-2xl p-10 shadow-2xl space-y-6">
-              <div className="flex items-center gap-3">
-                <LockIcon className="text-indigo-600" size={24} />
-                <h3 className="text-lg font-semibold text-gray-800">Configura tu TOTP</h3>
-              </div>
-              <p className="text-sm text-gray-600">
-                Escanea el codigo QR con tu app autenticadora o introduce el codigo manual. Luego escribe el primer
-                codigo generado para confirmar.
-              </p>
-              {totpQrDataUrl ? (
-                <div className="flex justify-center">
-                  <img
-                    src={totpQrDataUrl}
-                    alt="QR TOTP"
-                    className="rounded-xl border border-indigo-100 p-3 bg-white"
-                    width={220}
-                    height={220}
-                  />
-                </div>
-              ) : totpQrError ? (
-                <p className="text-sm text-red-600 text-center">{totpQrError}</p>
-              ) : null}
-              {totpSetupData?.secretBase32 && (
-                <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-3 text-xs text-gray-700">
-                  <span>Codigo manual:</span>
-                  <code className="manual-code">{totpSetupData.secretBase32}</code>
-                </div>
-              )}
-              <form onSubmit={handleTotpSetupSubmit} className="space-y-3">
-                <label className="block text-sm font-medium text-gray-600">
-                  Codigo TOTP de 6 digitos
-                  <input
-                    value={totpSetupCode}
-                    onChange={(event) =>
-                      setTotpSetupCode(event.target.value.replace(/\D/g, "").slice(0, 6))
-                    }
-                    inputMode="numeric"
-                    maxLength={6}
-                    placeholder="000000"
-                    required
-                  />
-                </label>
-                {totpSetupError && <p className="text-sm text-red-600">{totpSetupError}</p>}
-                <div className="flex justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      void (async () => {
-                        await logout().catch(() => undefined);
-                        setShowTotpSetup(false);
-                        setTotpSetupData(null);
-                        setTotpSetupCode("");
-                        setTotpQrDataUrl("");
-                        setTotpQrError("");
-                        setStatusMessage("Configuracion TOTP cancelada. Inicia sesion para completarla.");
-                        navigate("/", { replace: true });
-                      })();
-                    }}
-                    className="px-4 py-2 rounded-lg border text-gray-700 hover:bg-gray-100 transition"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={totpSetupProcessing}
-                    className="px-4 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition disabled:opacity-60"
-                  >
-                    {totpSetupProcessing ? "Verificando..." : "Confirmar TOTP"}
-                  </button>
-                </div>
-              </form>
-            </div>
+        <Modal isOpen={showTotpSetup} onClose={() => { }}>
+          <div className="flex items-center gap-3 mb-4">
+            <LockIcon className="text-indigo-600" size={24} />
+            <h3 className="text-lg font-semibold text-gray-800">Configura tu TOTP</h3>
           </div>
-        )}
+          <p className="text-sm text-gray-600 mb-4">
+            Escanea el codigo QR con tu app autenticadora o introduce el codigo manual. Luego escribe el primer
+            codigo generado para confirmar.
+          </p>
+          {totpQrDataUrl ? (
+            <div className="flex justify-center mb-4">
+              <img
+                src={totpQrDataUrl}
+                alt="QR TOTP"
+                className="rounded-xl border border-indigo-100 p-3 bg-white"
+                width={220}
+                height={220}
+              />
+            </div>
+          ) : totpQrError ? (
+            <p className="text-sm text-red-600 text-center mb-4">{totpQrError}</p>
+          ) : null}
+          {totpSetupData?.secretBase32 && (
+            <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-3 text-xs text-gray-700 mb-4">
+              <span>Codigo manual:</span>
+              <code className="manual-code ml-2 font-mono font-bold">{totpSetupData.secretBase32}</code>
+            </div>
+          )}
+          <form onSubmit={handleTotpSetupSubmit} className="space-y-3">
+            <Input
+              label="Codigo TOTP de 6 digitos"
+              value={totpSetupCode}
+              onChange={(e) => setTotpSetupCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              inputMode="numeric"
+              maxLength={6}
+              placeholder="000000"
+              required
+              error={totpSetupError}
+            />
+            <div className="flex justify-end gap-3">
+              <Button
+                type="button"
+                onClick={() => {
+                  void (async () => {
+                    await logout().catch(() => undefined);
+                    setShowTotpSetup(false);
+                    setTotpSetupData(null);
+                    setTotpSetupCode("");
+                    setTotpQrDataUrl("");
+                    setTotpQrError("");
+                    setStatusMessage("Configuracion TOTP cancelada. Inicia sesion para completarla.");
+                    navigate("/", { replace: true });
+                  })();
+                }}
+                className="bg-white border text-gray-700 hover:bg-gray-100"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                processing={totpSetupProcessing}
+                className="bg-indigo-600 text-white hover:bg-indigo-700"
+              >
+                {totpSetupProcessing ? "Verificando..." : "Confirmar TOTP"}
+              </Button>
+            </div>
+          </form>
+        </Modal>
       </div>
     </div>
   );

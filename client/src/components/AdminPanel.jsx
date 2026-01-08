@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { API_BASE, useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/AuthContext";
+import { API_BASE } from "../api/auth.api";
 
 const ROLE_OPTIONS = [
   { value: "dept_head", label: "Jefe de departamento" },
