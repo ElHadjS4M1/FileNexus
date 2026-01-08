@@ -83,12 +83,10 @@ export default function AdminPanel() {
     return null;
   }
 
-  const handleLogout = () => {
-    void logout().catch(() => undefined);
-  };
+
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col items-center p-10">
+    <div className="flex flex-col items-center p-10">
       <div className="max-w-5xl w-full bg-white rounded-3xl shadow-2xl p-8 border border-indigo-100 space-y-8">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div>
@@ -97,13 +95,7 @@ export default function AdminPanel() {
               Gestiona cuentas con contrasenas temporales y revisa el estado de inicializacion.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="px-4 py-2 rounded-xl border border-indigo-200 text-indigo-600 font-semibold hover:bg-indigo-50 transition"
-          >
-            Cerrar sesion
-          </button>
+
         </div>
 
         {error && <p className="text-red-600 text-sm text-center">{error}</p>}
