@@ -11,6 +11,8 @@ import {
   decryptFileWithAesGcm,
   sha256Base64,
   arrayBufferToBase64,
+  importPrivateKeyForSigning,
+  signHash,
 } from "../utils/fileCryptoUtils";
 
 const UploadIcon = ({ size = 24, className = "" }) => (
@@ -73,6 +75,7 @@ export default function FileCryptoDemo() {
   const [working, setWorking] = useState(false);
   const [filesStored, setFilesStored] = useState([]);
   const [loadingFiles, setLoadingFiles] = useState(false);
+  const [errorPopup, setErrorPopup] = useState(null); // For signature error popup
 
   const fetchFiles = useCallback(async () => {
     if (!user) {
@@ -118,6 +121,21 @@ export default function FileCryptoDemo() {
       const fileBuffer = await file.arrayBuffer();
       const hashC = await sha256Base64(fileBuffer);
 
+      // Sign the hash with private key
+      let signatureBase64 = null;
+      if (user.privateKeyPkcs8Base64) {
+        console.log("Signing file with private key...");
+        try {
+          const signingKey = await importPrivateKeyForSigning(user.privateKeyPkcs8Base64);
+          signatureBase64 = await signHash(hashC, signingKey);
+          console.log("File signed successfully, signature length:", signatureBase64.length);
+        } catch (signError) {
+          console.error("Error signing file:", signError);
+        }
+      } else {
+        console.log("No privateKeyPkcs8Base64 available, skipping signature");
+      }
+
       const ciphertextBlob = new Blob([meta.ciphertext], { type: "application/octet-stream" });
       const formData = new FormData();
       formData.append("ciphertext", ciphertextBlob, `${file.name}.enc`);
@@ -126,6 +144,10 @@ export default function FileCryptoDemo() {
       formData.append("aeadNonce", arrayBufferToBase64(meta.iv.buffer));
       formData.append("ekOwner", wrappedKey);
       formData.append("hashC", hashC);
+      if (signatureBase64) {
+        formData.append("signature", signatureBase64);
+        console.log("Signature added to form data");
+      }
       formData.append(
         "meta",
         JSON.stringify({
@@ -154,7 +176,7 @@ export default function FileCryptoDemo() {
       meta.aesKey = null;
       meta.ciphertext = new Uint8Array();
       meta.iv = new Uint8Array();
-      setMessage("Documento cifrado y almacenado correctamente.");
+      setMessage("Documento cifrado, firmado y almacenado correctamente.");
       await fetchFiles();
     } catch (error) {
       setMessage(error.message ?? "Error durante el proceso de cifrado.");
@@ -180,6 +202,35 @@ export default function FileCryptoDemo() {
       const aesRawBase64 = await decryptAesKeyWithPrivateKey(payload.ekOwner, user.privateKeyCryptoKey);
       const aesKey = await importAesKeyFromRawBase64(aesRawBase64);
       const fileBuf = await decryptFileWithAesGcm(payload.ciphertext, payload.aeadNonce, aesKey);
+
+      // Verify signature if present
+      if (payload.signature && payload.ownerPublicKey) {
+        console.log("Verifying signature in Dashboard...");
+        try {
+          const { sha256Base64, importPublicKeyForVerification, verifySignature } = await import("../utils/fileCryptoUtils");
+          const hash = await sha256Base64(fileBuf);
+          const verifyKey = await importPublicKeyForVerification(payload.ownerPublicKey);
+          const isValid = await verifySignature(hash, payload.signature, verifyKey);
+          console.log("Signature valid:", isValid);
+          if (!isValid) {
+            setErrorPopup({
+              title: "Error de Integridad",
+              message: "No se puede proceder con la descarga. El archivo ha sido corrompido o modificado."
+            });
+            setWorking(false);
+            return;
+          }
+        } catch (verifyError) {
+          console.error("Signature verification error:", verifyError);
+          setErrorPopup({
+            title: "Error de Verificación",
+            message: "Error al verificar la firma digital del documento."
+          });
+          setWorking(false);
+          return;
+        }
+      }
+
       const mimeType = payload.meta?.mimeType ?? "application/octet-stream";
       const link = document.createElement("a");
       link.href = URL.createObjectURL(new Blob([fileBuf], { type: mimeType }));
@@ -284,6 +335,69 @@ export default function FileCryptoDemo() {
           )}
         </section>
       </div>
+
+      {/* Error Popup Modal */}
+      {errorPopup && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: "rgba(0,0,0,0.5)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: "white",
+            borderRadius: "12px",
+            padding: "32px",
+            maxWidth: "400px",
+            textAlign: "center",
+            boxShadow: "0 10px 40px rgba(0,0,0,0.2)"
+          }}>
+            <div style={{
+              width: "64px",
+              height: "64px",
+              background: "#fee2e2",
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 16px"
+            }}>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+            </div>
+            <h3 style={{ fontSize: "20px", fontWeight: "600", color: "#dc2626", marginBottom: "12px" }}>
+              {errorPopup.title}
+            </h3>
+            <p style={{ fontSize: "14px", color: "#666", marginBottom: "24px", lineHeight: "1.5" }}>
+              {errorPopup.message}
+            </p>
+            <button
+              onClick={() => setErrorPopup(null)}
+              style={{
+                padding: "12px 32px",
+                background: "#dc2626",
+                color: "white",
+                border: "none",
+                borderRadius: "8px",
+                fontSize: "14px",
+                fontWeight: "500",
+                cursor: "pointer"
+              }}
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

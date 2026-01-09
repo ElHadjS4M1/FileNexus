@@ -11,6 +11,7 @@ export type FileCreateInput = {
   filePath: string;
   ekOwner: Buffer;
   hashC?: Buffer;
+  signature?: Buffer;
 };
 
 /**
@@ -30,6 +31,7 @@ export const saveFile = (payload: FileCreateInput): Promise<File> =>
       filePath: payload.filePath,
       ekOwner: payload.ekOwner,
       hashC: payload.hashC,
+      signature: payload.signature,
     },
   });
 
@@ -47,8 +49,9 @@ export const getFileForOwner = (id: string, ownerId: string): Promise<File | nul
  * @param {string} ownerId - Identificador del propietario.
  * @returns {Promise<File[]>} Colección de archivos.
  */
-export const listFilesByOwner = (ownerId: string): Promise<File[]> =>
+export const listFilesByOwner = (ownerId: string) =>
   prisma.file.findMany({
     where: { ownerId },
     orderBy: { createdAt: 'desc' },
+    include: { owner: { select: { username: true } } },
   });

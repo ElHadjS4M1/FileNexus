@@ -20,34 +20,54 @@ enum UserStatus {
 }
 
 model User {
-  id            String     @id @default(uuid())
-  username      String     @unique
+  id            String      @id @default(uuid())
+  username      String      @unique
   role          UserRole
   pwdHash       String
-  status        UserStatus @default(pending_init)
+  status        UserStatus  @default(pending_init)
   publicKeyJwk  Json
   privEnc       Bytes
   privNonce     Bytes
   clientSalt    Bytes
   kdfClient     Json
   totpSecretEnc Bytes?
-  totpEnabled   Boolean    @default(false)
-  createdAt     DateTime   @default(now())
+  totpEnabled   Boolean     @default(false)
+  createdAt     DateTime    @default(now())
   files         File[]
+  sharedWithMe  FileShare[] @relation("SharedWithUser")
+  filesIShared  FileShare[] @relation("SharedByUser")
 }
 
 model File {
-  id         String   @id @default(uuid())
+  id         String      @id @default(uuid())
   ownerId    String
-  owner      User     @relation(fields: [ownerId], references: [id])
+  owner      User        @relation(fields: [ownerId], references: [id])
   filename   String
   sizeBytes  Int
   meta       Json?
   aeadNonce  Bytes
   ekOwner    Bytes
   hashC      Bytes?
+  signature  Bytes?
   filePath   String
-  createdAt  DateTime @default(now())
+  createdAt  DateTime    @default(now())
+  shares     FileShare[]
 
   @@index([ownerId])
+}
+
+model FileShare {
+  id           String   @id @default(uuid())
+  fileId       String
+  file         File     @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User     @relation("SharedWithUser", fields: [userId], references: [id])
+  sharedById   String
+  sharedBy     User     @relation("SharedByUser", fields: [sharedById], references: [id])
+  encryptedKey Bytes
+  createdAt    DateTime @default(now())
+
+  @@unique([fileId, userId])
+  @@index([userId])
+  @@index([fileId])
 }

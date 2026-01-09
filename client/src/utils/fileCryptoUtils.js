@@ -78,6 +78,10 @@ export async function importPublicKeyFromPem(pem) {
   return await window.crypto.subtle.importKey("spki", spkiBuf, { name: "RSA-OAEP", hash: "SHA-256" }, true, ["encrypt"]);
 }
 
+export async function importPublicKeyFromJwk(jwk) {
+  return await window.crypto.subtle.importKey("jwk", jwk, { name: "RSA-OAEP", hash: "SHA-256" }, true, ["encrypt"]);
+}
+
 export async function importPrivateKeyFromPkcs8Base64(pkcs8Base64) {
   const buf = base64ToArrayBuffer(pkcs8Base64);
   return await window.crypto.subtle.importKey("pkcs8", buf, { name: "RSA-OAEP", hash: "SHA-256" }, true, ["decrypt"]);
@@ -101,4 +105,50 @@ export async function sha256Base64(buffer) {
   return arrayBufferToBase64(hash);
 }
 
+// Import private key for signing (RSA-PSS)
+export async function importPrivateKeyForSigning(pkcs8Base64) {
+  const buf = base64ToArrayBuffer(pkcs8Base64);
+  return await window.crypto.subtle.importKey(
+    "pkcs8",
+    buf,
+    { name: "RSA-PSS", hash: "SHA-256" },
+    true,
+    ["sign"]
+  );
+}
 
+// Import public key for verification (RSA-PSS) from JWK
+export async function importPublicKeyForVerification(jwk) {
+  // Modify JWK for RSA-PSS algorithm
+  const pssJwk = { ...jwk, alg: "PS256" };
+  return await window.crypto.subtle.importKey(
+    "jwk",
+    pssJwk,
+    { name: "RSA-PSS", hash: "SHA-256" },
+    true,
+    ["verify"]
+  );
+}
+
+// Sign a hash with private key
+export async function signHash(hashBase64, signingKey) {
+  const hashBuf = base64ToArrayBuffer(hashBase64);
+  const signature = await window.crypto.subtle.sign(
+    { name: "RSA-PSS", saltLength: 32 },
+    signingKey,
+    hashBuf
+  );
+  return arrayBufferToBase64(signature);
+}
+
+// Verify signature
+export async function verifySignature(hashBase64, signatureBase64, verifyKey) {
+  const hashBuf = base64ToArrayBuffer(hashBase64);
+  const sigBuf = base64ToArrayBuffer(signatureBase64);
+  return await window.crypto.subtle.verify(
+    { name: "RSA-PSS", saltLength: 32 },
+    verifyKey,
+    sigBuf,
+    hashBuf
+  );
+}

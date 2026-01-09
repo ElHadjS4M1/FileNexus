@@ -40,6 +40,15 @@ export const authApi = {
 
     getMaterials: () => apiRequest("/me/keys/materials"),
 
+    // Check if current session is valid (returns user info if logged in)
+    checkSession: async () => {
+        try {
+            return await apiRequest("/me");
+        } catch {
+            return null;
+        }
+    },
+
     setupTotp: (payload) => apiRequest("/auth/totp/setup", {
         method: "POST",
         body: JSON.stringify(payload),
