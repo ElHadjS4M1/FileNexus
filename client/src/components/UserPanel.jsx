@@ -38,7 +38,7 @@ export default function UserPanel() {
         );
     }
 
-    // Find max value for chart scaling
+    // Encontrar valor máximo para escala del gráfico
     const maxCount = stats?.fileGrowth ? Math.max(...stats.fileGrowth.map(d => d.count), 1) : 1;
 
     return (
@@ -49,7 +49,7 @@ export default function UserPanel() {
                 </h1>
                 <p style={{ color: "#666", marginBottom: "32px" }}>Bienvenido, {user?.username}</p>
 
-                {/* Stats Cards */}
+                {/* Tarjetas de estadísticas */}
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "20px", marginBottom: "32px" }}>
                     <div style={{ background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)", borderRadius: "16px", padding: "24px", color: "white" }}>
                         <div style={{ fontSize: "14px", opacity: 0.9 }}>Mis Documentos</div>
@@ -61,7 +61,7 @@ export default function UserPanel() {
                     </div>
                 </div>
 
-                {/* File Growth Chart */}
+                {/* Gráfico de crecimiento de archivos */}
                 <div style={{ background: "white", borderRadius: "16px", padding: "24px", marginBottom: "32px", boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
                     <h2 style={{ fontSize: "18px", fontWeight: "600", marginBottom: "20px" }}>
                         📈 Mis archivos - Último mes
@@ -89,9 +89,9 @@ export default function UserPanel() {
                     </div>
                 </div>
 
-                {/* Recent Tables */}
+                {/* Tablas recientes */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
-                    {/* Recent Owned Files */}
+                    {/* Archivos propios recientes */}
                     <div style={{ background: "white", borderRadius: "16px", padding: "24px", boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
                         <h2 style={{ fontSize: "18px", fontWeight: "600", marginBottom: "16px" }}>
                             📁 Últimos 5 documentos subidos
@@ -120,7 +120,7 @@ export default function UserPanel() {
                         )}
                     </div>
 
-                    {/* Recent Shared Files */}
+                    {/* Archivos compartidos recientes */}
                     <div style={{ background: "white", borderRadius: "16px", padding: "24px", boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
                         <h2 style={{ fontSize: "18px", fontWeight: "600", marginBottom: "16px" }}>
                             🔗 Últimos 5 compartidos conmigo

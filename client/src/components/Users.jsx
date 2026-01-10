@@ -8,13 +8,13 @@ export default function Users() {
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState("");
 
-    // Filters
+    // Filtros
     const [searchQuery, setSearchQuery] = useState("");
     const [roleFilter, setRoleFilter] = useState("");
     const [statusFilter, setStatusFilter] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
 
-    // Create user form
+    // Formulario de creación de usuario
     const [showCreate, setShowCreate] = useState(false);
     const [newUsername, setNewUsername] = useState("");
     const [newPassword, setNewPassword] = useState("TempPass123!");
@@ -39,7 +39,7 @@ export default function Users() {
         fetchUsers();
     }, [fetchUsers]);
 
-    // Filter and paginate users
+    // Filtrar y paginar usuarios
     const filteredUsers = useMemo(() => {
         return users
             .filter(u => {
@@ -57,7 +57,7 @@ export default function Users() {
         return filteredUsers.slice(start, start + ITEMS_PER_PAGE);
     }, [filteredUsers, currentPage]);
 
-    // Reset page when filters change
+    // Reiniciar página cuando cambian los filtros
     useEffect(() => {
         setCurrentPage(1);
     }, [searchQuery, roleFilter, statusFilter]);
@@ -117,7 +117,7 @@ export default function Users() {
                     </div>
                 )}
 
-                {/* Filters */}
+                {/* Filtros */}
                 <div style={{ display: "flex", gap: "12px", marginBottom: "16px", alignItems: "center" }}>
                     <input
                         type="text"
@@ -200,7 +200,7 @@ export default function Users() {
                         </table>
                     )}
 
-                    {/* Pagination */}
+                    {/* Paginación */}
                     {totalPages > 1 && (
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px", borderTop: "1px solid #e5e5e5", background: "#f9fafb" }}>
                             <span style={{ fontSize: "14px", color: "#666" }}>
@@ -245,7 +245,7 @@ export default function Users() {
                 </div>
             </div>
 
-            {/* Create User Modal */}
+            {/* Modal de creación de usuario */}
             {showCreate && (
                 <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
                     <div style={{ background: "white", borderRadius: "12px", padding: "32px", width: "400px" }}>

@@ -48,16 +48,16 @@ router.get('/keys/materials', async (req, res, next) => {
         : null;
     const jwkCandidate =
       publicKeyRecordRaw && typeof publicKeyRecordRaw.jwk === 'object'
-        ? (publicKeyRecordRaw.jwk as JsonWebKey)
-        : (publicKeyRecordRaw as unknown as JsonWebKey | null);
+        ? (publicKeyRecordRaw.jwk as any)
+        : (publicKeyRecordRaw as unknown as any);
     const publicKeyPem =
       publicKeyRecordRaw && typeof publicKeyRecordRaw.pem === 'string'
         ? (publicKeyRecordRaw.pem as string)
         : jwkCandidate
           ? (createPublicKey({
-              key: jwkCandidate,
-              format: 'jwk',
-            }).export({ type: 'spki', format: 'pem' }) as string)
+            key: jwkCandidate,
+            format: 'jwk',
+          }).export({ type: 'spki', format: 'pem' }) as string)
           : null;
     const kdfInfo =
       typeof user.kdfClient === 'object' && user.kdfClient !== null

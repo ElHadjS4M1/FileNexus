@@ -16,7 +16,7 @@ const router = Router();
 
 router.use(authenticate);
 
-// Stats for project_head dashboard
+// Estadísticas para el panel de project_head
 router.get('/stats', async (req, res, next) => {
     try {
         if (!req.authUser) {
@@ -26,7 +26,7 @@ router.get('/stats', async (req, res, next) => {
             throw new HttpError(403, 'Solo project_head puede acceder');
         }
 
-        // Get the project led by this user
+        // Obtener el proyecto liderado por este usuario
         const project = await prisma.project.findFirst({
             where: { leaderId: req.authUser.id },
         });
@@ -45,7 +45,7 @@ router.get('/stats', async (req, res, next) => {
         const now = new Date();
         const twentyNineDaysAgo = new Date(now.getTime() - 29 * 24 * 60 * 60 * 1000);
 
-        // Get files in this project OR owned by project_head created in last 30 days (including today)
+        // Obtener archivos en este proyecto O propiedad del project_head creados en los últimos 30 días (incluyendo hoy)
         const files = await prisma.file.findMany({
             where: {
                 OR: [
@@ -58,7 +58,7 @@ router.get('/stats', async (req, res, next) => {
             orderBy: { createdAt: 'asc' },
         });
 
-        // Group by day
+        // Agrupar por día
         const fileGrowth: Record<string, number> = {};
         for (let i = 0; i < 30; i++) {
             const d = new Date(twentyNineDaysAgo.getTime() + i * 24 * 60 * 60 * 1000);
@@ -70,7 +70,7 @@ router.get('/stats', async (req, res, next) => {
             if (fileGrowth[key] !== undefined) fileGrowth[key]++;
         });
 
-        // Last 5 members added to project
+        // Últimos 5 miembros añadidos al proyecto
         const recentMembers = await prisma.projectMember.findMany({
             where: { projectId: project.id },
             orderBy: { id: 'desc' },
@@ -78,7 +78,7 @@ router.get('/stats', async (req, res, next) => {
             include: { user: { select: { id: true, username: true, role: true } } },
         });
 
-        // Last 5 files: in project OR owned by project_head
+        // Últimos 5 archivos: en el proyecto O propiedad del project_head
         const recentFiles = await prisma.file.findMany({
             where: {
                 OR: [
@@ -117,7 +117,7 @@ router.get('/stats', async (req, res, next) => {
     }
 });
 
-// Create project (dept_head only) - leaderId is optional
+// Crear proyecto (solo dept_head) - leaderId es opcional
 router.post('/', async (req, res, next) => {
     try {
         if (!req.authUser) {
@@ -139,7 +139,7 @@ router.post('/', async (req, res, next) => {
     }
 });
 
-// Update project leader (dept_head only)
+// Actualizar líder del proyecto (solo dept_head)
 router.patch('/:id', async (req, res, next) => {
     try {
         if (!req.authUser) {
@@ -157,7 +157,7 @@ router.patch('/:id', async (req, res, next) => {
     }
 });
 
-// List projects for current user
+// Listar proyectos para el usuario actual
 router.get('/', async (req, res, next) => {
     try {
         if (!req.authUser) {
@@ -171,7 +171,7 @@ router.get('/', async (req, res, next) => {
     }
 });
 
-// Get project by ID
+// Obtener proyecto por ID
 router.get('/:id', async (req, res, next) => {
     try {
         if (!req.authUser) {
@@ -189,7 +189,7 @@ router.get('/:id', async (req, res, next) => {
     }
 });
 
-// Delete project (dept_head only)
+// Eliminar proyecto (solo dept_head)
 router.delete('/:id', async (req, res, next) => {
     try {
         if (!req.authUser) {
@@ -203,9 +203,9 @@ router.delete('/:id', async (req, res, next) => {
     }
 });
 
-// ============ MEMBERS ============
+// ============ MIEMBROS ============
 
-// List project members
+// Listar miembros del proyecto
 router.get('/:id/members', async (req, res, next) => {
     try {
         if (!req.authUser) {
@@ -223,7 +223,7 @@ router.get('/:id/members', async (req, res, next) => {
     }
 });
 
-// Add member to project (project_head only)
+// Añadir miembro al proyecto (solo project_head)
 router.post('/:id/members', async (req, res, next) => {
     try {
         if (!req.authUser) {
@@ -242,7 +242,7 @@ router.post('/:id/members', async (req, res, next) => {
     }
 });
 
-// Get all project members' public keys for multi-recipient encryption
+// Obtener claves públicas de todos los miembros del proyecto para cifrado multi-destinatario
 router.get('/:id/members/keys', async (req, res, next) => {
     try {
         if (!req.authUser) {
@@ -265,14 +265,14 @@ router.get('/:id/members/keys', async (req, res, next) => {
             throw new HttpError(404, 'Project not found');
         }
 
-        // Verify user has access to this project
+        // Verificar que el usuario tiene acceso a este proyecto
         const isMember = project.leaderId === req.authUser.id ||
             project.members.some((m: { userId: string }) => m.userId === req.authUser!.id);
         if (!isMember) {
             throw new HttpError(403, 'No tienes acceso a este proyecto');
         }
 
-        // Collect all members' public keys (leader + members, excluding requester)
+        // Recopilar claves públicas de todos los miembros (líder + miembros, excluyendo solicitante)
         const recipients: { id: string; username: string; publicKeyJwk: unknown }[] = [];
 
         if (project.leader && project.leader.id !== req.authUser.id && project.leader.publicKeyJwk) {
@@ -301,7 +301,7 @@ router.get('/:id/members/keys', async (req, res, next) => {
     }
 });
 
-// Remove member from project (project_head only)
+// Eliminar miembro del proyecto (solo project_head)
 router.delete('/:id/members/:userId', async (req, res, next) => {
     try {
         if (!req.authUser) {

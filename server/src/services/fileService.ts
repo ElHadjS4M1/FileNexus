@@ -27,14 +27,14 @@ export const saveFile = (payload: FileCreateInput): Promise<File> =>
       ownerId: payload.ownerId,
       filename: payload.filename,
       sizeBytes: payload.sizeBytes,
-      meta: payload.meta,
+      meta: payload.meta as any,
       aeadNonce: payload.aeadNonce,
       filePath: payload.filePath,
       ekOwner: payload.ekOwner,
       hashC: payload.hashC,
       signature: payload.signature,
       projectId: payload.projectId,
-    },
+    } as any,
   });
 
 /**

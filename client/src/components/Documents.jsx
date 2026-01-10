@@ -34,14 +34,14 @@ export default function Documents() {
     const [userProject, setUserProject] = useState(null);
     const [shareWithTeam, setShareWithTeam] = useState(false);
 
-    // Search, sort, pagination state
+    // Estado de búsqueda, ordenación y paginación
     const [searchQuery, setSearchQuery] = useState("");
     const [sortField, setSortField] = useState("createdAt");
     const [sortDirection, setSortDirection] = useState("desc");
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
-    // Fetch user's project (if they belong to one)
+    // Obtener proyecto del usuario (si pertenece a uno)
     useEffect(() => {
         if (!user) {
             setUserProject(null);
@@ -95,7 +95,7 @@ export default function Documents() {
         fetchFiles().catch(() => undefined);
     }, [fetchFiles]);
 
-    // Handle file upload with encryption
+    // Manejar subida de archivos con cifrado
     const handleUpload = async () => {
         if (!uploadFile) {
             setMessage("Selecciona un archivo primero.");
@@ -114,7 +114,7 @@ export default function Documents() {
             const fileBuffer = await uploadFile.arrayBuffer();
             const hashC = await sha256Base64(fileBuffer);
 
-            // Sign the hash with private key
+            // Firmar el hash con clave privada
             let signatureBase64 = null;
             if (user.privateKeyPkcs8Base64) {
                 const signingKey = await importPrivateKeyForSigning(user.privateKeyPkcs8Base64);
@@ -133,7 +133,7 @@ export default function Documents() {
                 formData.append("signature", signatureBase64);
             }
 
-            // Handle team sharing
+            // Manejar compartir con equipo
             let encryptedKeysForTeam = [];
             if (shareWithTeam && userProject) {
                 try {
@@ -181,11 +181,11 @@ export default function Documents() {
         }
     };
 
-    // Combine and process files
+    // Combinar y procesar archivos
     const allFiles = useMemo(() => {
         const combined = [...ownedFiles, ...sharedFiles];
 
-        // Filter by search
+        // Filtrar por búsqueda
         const filtered = combined.filter(file => {
             const query = searchQuery.toLowerCase();
             const filename = file.filename?.toLowerCase() || "";
@@ -193,7 +193,7 @@ export default function Documents() {
             return filename.includes(query) || owner.includes(query);
         });
 
-        // Sort
+        // Ordenar
         const sorted = [...filtered].sort((a, b) => {
             let aVal, bVal;
             if (sortField === "filename") {
@@ -218,11 +218,11 @@ export default function Documents() {
         return sorted;
     }, [ownedFiles, sharedFiles, searchQuery, sortField, sortDirection]);
 
-    // Pagination
+    // Paginación
     const totalPages = Math.ceil(allFiles.length / itemsPerPage);
     const paginatedFiles = allFiles.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-    // Reset to page 1 when search changes
+    // Reiniciar a página 1 cuando cambia la búsqueda
     useEffect(() => {
         setCurrentPage(1);
     }, [searchQuery]);
@@ -256,7 +256,7 @@ export default function Documents() {
             const aesKey = await importAesKeyFromRawBase64(aesRawBase64);
             const fileBuf = await decryptFileWithAesGcm(payload.ciphertext, payload.aeadNonce, aesKey);
 
-            // Verify signature if present
+            // Verificar firma si está presente
             if (payload.signature && payload.ownerPublicKey) {
                 console.log("Verifying signature...");
                 try {
@@ -297,7 +297,7 @@ export default function Documents() {
         }
     };
 
-    // Share existing file with team
+    // Compartir archivo existente con el equipo
     const handleShareWithTeam = async (file) => {
         if (!user || !user.privateKeyCryptoKey || !userProject) {
             setMessage("Debes tener el proyecto y clave privada para compartir.");
@@ -305,23 +305,23 @@ export default function Documents() {
         }
         setWorking(true);
         try {
-            // 1. Get the file's encrypted key (ekOwner)
+            // 1. Obtener la clave cifrada del archivo (ekOwner)
             const fileRes = await fetch(`${API_BASE}/files/${file.id}`, { credentials: "include" });
             if (!fileRes.ok) throw new Error("No se pudo obtener el archivo.");
             const payload = await fileRes.json();
 
-            // 2. Decrypt the AES key with user's private key
+            // 2. Descifrar la clave AES con la clave privada del usuario
             const aesRawBase64 = await decryptAesKeyWithPrivateKey(payload.ekOwner, user.privateKeyCryptoKey);
 
-            // 3. Get team members' public keys
+            // 3. Obtener claves públicas de los miembros del equipo
             const keysRes = await fetch(`${API_BASE}/projects/${userProject.id}/members/keys`, { credentials: "include" });
             if (!keysRes.ok) throw new Error("No se pudieron obtener las claves del equipo.");
             const keysData = await keysRes.json();
 
-            // 4. Encrypt the AES key for each team member
+            // 4. Cifrar la clave AES para cada miembro del equipo
             const encryptedKeys = await encryptKeyForRecipients(aesRawBase64, keysData.recipients || []);
 
-            // 5. Send to server
+            // 5. Enviar al servidor
             const shareRes = await fetch(`${API_BASE}/files/${file.id}/share-with-team`, {
                 method: "POST",
                 credentials: "include",
@@ -360,7 +360,7 @@ export default function Documents() {
     return (
         <div style={{ padding: "32px" }}>
             <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-                {/* Header */}
+                {/* Encabezado */}
                 <div style={{ marginBottom: "24px" }}>
                     <h1 style={{ fontSize: "24px", fontWeight: "600", color: "#1a1a1a", marginBottom: "8px" }}>
                         Mis documentos
@@ -376,7 +376,7 @@ export default function Documents() {
                     </p>
                 )}
 
-                {/* Search, Upload and Refresh */}
+                {/* Buscar, Subir y Actualizar */}
                 <div style={{ display: "flex", gap: "12px", marginBottom: "16px" }}>
                     <div style={{ position: "relative", flex: 1 }}>
                         <svg style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)" }} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#999" strokeWidth="2">
@@ -436,7 +436,7 @@ export default function Documents() {
                     </button>
                 </div>
 
-                {/* Documents Table */}
+                {/* Tabla de Documentos */}
                 <div style={{ background: "white", borderRadius: "12px", boxShadow: "0 1px 3px rgba(0,0,0,0.08)", overflow: "hidden" }}>
                     <div style={{ padding: "16px 24px", borderBottom: "1px solid #eee" }}>
                         <span style={{ fontSize: "14px", color: "#666" }}>
@@ -552,7 +552,7 @@ export default function Documents() {
                                 </tbody>
                             </table>
 
-                            {/* Pagination */}
+                            {/* Paginación */}
                             {totalPages > 1 && (
                                 <div style={{ padding: "16px 24px", borderTop: "1px solid #eee", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                     <span style={{ fontSize: "14px", color: "#666" }}>
@@ -610,7 +610,7 @@ export default function Documents() {
                 />
             )}
 
-            {/* Error Popup Modal */}
+            {/* Modal de Error */}
             {errorPopup && (
                 <div style={{
                     position: "fixed",
@@ -673,7 +673,7 @@ export default function Documents() {
                 </div>
             )}
 
-            {/* Upload Modal */}
+            {/* Modal de Subida */}
             {showUploadModal && (
                 <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
                     <div style={{ background: "white", borderRadius: "16px", padding: "32px", width: "450px", textAlign: "center" }}>
@@ -695,7 +695,7 @@ export default function Documents() {
                             )}
                         </div>
 
-                        {/* Team sharing checkbox */}
+                        {/* Checkbox de compartir con equipo */}
                         {userProject && (
                             <label style={{
                                 display: "flex",

@@ -133,7 +133,7 @@ function UnlockScreen() {
 export default function Layout() {
     const { user, sessionUser, loading } = useAuth();
 
-    // Still checking session
+    // Aún verificando sesión
     if (loading) {
         return (
             <div style={{
@@ -160,12 +160,12 @@ export default function Layout() {
         );
     }
 
-    // Session exists but keys not unlocked - show unlock screen
+    // La sesión existe pero las claves no están desbloqueadas - mostrar pantalla de desbloqueo
     if (sessionUser && !user) {
         return <UnlockScreen />;
     }
 
-    // Not logged in at all
+    // No ha iniciado sesión en absoluto
     if (!user) {
         return <Navigate to="/" replace />;
     }

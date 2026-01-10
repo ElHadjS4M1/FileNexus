@@ -8,8 +8,8 @@ const router = Router();
 router.use(authenticate);
 
 /**
- * Search users by username (for sharing files, adding to projects).
- * Supports optional role filter and unassigned filter.
+ * Buscar usuarios por nombre de usuario (para compartir archivos, añadir a proyectos).
+ * Soporta filtro de rol opcional y filtro de no asignados.
  */
 router.get('/search', async (req, res, next) => {
     try {
@@ -21,7 +21,7 @@ router.get('/search', async (req, res, next) => {
         const roleFilter = req.query.role as string | undefined;
         const unassignedOnly = req.query.unassigned === 'true';
 
-        // Allow empty query when filtering by role (for dropdowns)
+        // Permitir consulta vacía al filtrar por rol (para menús desplegables)
         if (query.length < 2 && !roleFilter) {
             return res.json({ users: [] });
         }
@@ -39,7 +39,7 @@ router.get('/search', async (req, res, next) => {
             whereClause.role = roleFilter;
         }
 
-        // Filter out already assigned users
+        // Filtrar usuarios ya asignados
         if (unassignedOnly && roleFilter === 'dept_head') {
             whereClause.managedDepartment = null;
         }
@@ -64,7 +64,7 @@ router.get('/search', async (req, res, next) => {
 });
 
 /**
- * Get user's public key (for encrypting file key).
+ * Obtener clave pública del usuario (para cifrar clave de archivo).
  */
 router.get('/:userId/publicKey', async (req, res, next) => {
     try {
@@ -87,7 +87,7 @@ router.get('/:userId/publicKey', async (req, res, next) => {
             throw new HttpError(404, 'User not found');
         }
 
-        // Extract the JWK from the stored format (can be {jwk: ..., pem: ...} or direct JWK)
+        // Extraer el JWK del formato almacenado (puede ser {jwk: ..., pem: ...} o JWK directo)
         const storedKey = user.publicKeyJwk as Record<string, unknown>;
         const jwk = storedKey?.jwk || storedKey;
 
@@ -102,7 +102,7 @@ router.get('/:userId/publicKey', async (req, res, next) => {
 });
 
 /**
- * Stats for regular user dashboard
+ * Estadísticas para el panel de usuario regular
  */
 router.get('/stats', async (req, res, next) => {
     try {
@@ -116,7 +116,7 @@ router.get('/stats', async (req, res, next) => {
         const now = new Date();
         const twentyNineDaysAgo = new Date(now.getTime() - 29 * 24 * 60 * 60 * 1000);
 
-        // Get files owned by user created in last 30 days
+        // Obtener archivos propiedad del usuario creados en los últimos 30 días
         const files = await prisma.file.findMany({
             where: {
                 ownerId: req.authUser.id,
@@ -126,7 +126,7 @@ router.get('/stats', async (req, res, next) => {
             orderBy: { createdAt: 'asc' },
         });
 
-        // Group by day
+        // Agrupar por día
         const fileGrowth: Record<string, number> = {};
         for (let i = 0; i < 30; i++) {
             const d = new Date(twentyNineDaysAgo.getTime() + i * 24 * 60 * 60 * 1000);
@@ -138,7 +138,7 @@ router.get('/stats', async (req, res, next) => {
             if (fileGrowth[key] !== undefined) fileGrowth[key]++;
         });
 
-        // Last 5 owned files
+        // Últimos 5 archivos propios
         const recentOwnedFiles = await prisma.file.findMany({
             where: { ownerId: req.authUser.id },
             orderBy: { createdAt: 'desc' },
@@ -146,7 +146,7 @@ router.get('/stats', async (req, res, next) => {
             select: { id: true, filename: true, sizeBytes: true, createdAt: true },
         });
 
-        // Last 5 shared files (shared with this user)
+        // Últimos 5 archivos compartidos (compartidos con este usuario)
         const recentSharedFiles = await prisma.fileShare.findMany({
             where: { userId: req.authUser.id },
             orderBy: { createdAt: 'desc' },

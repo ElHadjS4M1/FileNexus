@@ -1,7 +1,7 @@
 import { prisma } from './prisma';
 
 /**
- * Create a new project (dept_head only, in their department)
+ * Crear un nuevo proyecto (solo dept_head, en su departamento)
  */
 export const createProject = async (
     name: string,
@@ -9,7 +9,7 @@ export const createProject = async (
     leaderId: string | undefined,
     creatorId: string
 ) => {
-    // Verify creator is the department manager
+    // Verificar que el creador es el jefe del departamento
     const department = await prisma.department.findUnique({
         where: { id: departmentId },
     });
@@ -17,7 +17,7 @@ export const createProject = async (
         throw new Error('Solo el jefe de departamento puede crear proyectos');
     }
 
-    // If leaderId is provided, verify leader is a project_head
+    // Si se proporciona leaderId, verificar que el líder sea un project_head
     if (leaderId) {
         const leader = await prisma.user.findUnique({
             where: { id: leaderId },
@@ -41,7 +41,7 @@ export const createProject = async (
 };
 
 /**
- * Update project leader (dept_head only)
+ * Actualizar líder del proyecto (solo dept_head)
  */
 export const updateProjectLeader = async (
     projectId: string,
@@ -57,7 +57,7 @@ export const updateProjectLeader = async (
         throw new Error('Solo el jefe de departamento puede asignar líderes');
     }
 
-    // If assigning a leader, verify they are a project_head
+    // Si se asigna un líder, verificar que sea un project_head
     if (leaderId) {
         const leader = await prisma.user.findUnique({
             where: { id: leaderId },
@@ -78,10 +78,10 @@ export const updateProjectLeader = async (
 };
 
 /**
- * List projects visible to a user
+ * Listar proyectos visibles para un usuario
  */
 export const listProjectsForUser = async (userId: string, userRole: string) => {
-    // Admin sees all
+    // Admin ve todo
     if (userRole === 'admin') {
         return prisma.project.findMany({
             include: {
@@ -93,7 +93,7 @@ export const listProjectsForUser = async (userId: string, userRole: string) => {
         });
     }
 
-    // Dept head sees projects in their department
+    // Jefe de departamento ve proyectos en su departamento
     if (userRole === 'dept_head') {
         const dept = await prisma.department.findUnique({
             where: { managerId: userId },
@@ -110,7 +110,7 @@ export const listProjectsForUser = async (userId: string, userRole: string) => {
         });
     }
 
-    // Project head sees projects they lead
+    // Líder de proyecto ve proyectos que lidera
     if (userRole === 'project_head') {
         return prisma.project.findMany({
             where: { leaderId: userId },
@@ -123,7 +123,7 @@ export const listProjectsForUser = async (userId: string, userRole: string) => {
         });
     }
 
-    // Regular users see projects they're members of OR lead
+    // Usuarios regulares ven proyectos de los que son miembros O lideran
     return prisma.project.findMany({
         where: {
             OR: [
@@ -141,7 +141,7 @@ export const listProjectsForUser = async (userId: string, userRole: string) => {
 };
 
 /**
- * Get project by ID with access check
+ * Obtener proyecto por ID con verificación de acceso
  */
 export const getProjectForUser = async (projectId: string, userId: string, userRole: string) => {
     const project = await prisma.project.findUnique({
@@ -159,7 +159,7 @@ export const getProjectForUser = async (projectId: string, userId: string, userR
 
     if (!project) return null;
 
-    // Check access
+    // Verificar acceso
     const hasAccess =
         userRole === 'admin' ||
         project.department.managerId === userId ||
@@ -172,7 +172,7 @@ export const getProjectForUser = async (projectId: string, userId: string, userR
 };
 
 /**
- * Delete project (dept_head only, in their department)
+ * Eliminar proyecto (solo dept_head, en su departamento)
  */
 export const deleteProject = async (projectId: string, userId: string) => {
     const project = await prisma.project.findUnique({
@@ -190,7 +190,7 @@ export const deleteProject = async (projectId: string, userId: string) => {
 };
 
 /**
- * Add member to project (project_head only)
+ * Añadir miembro al proyecto (solo project_head)
  */
 export const addProjectMember = async (projectId: string, userId: string, requesterId: string) => {
     const project = await prisma.project.findUnique({
@@ -201,7 +201,7 @@ export const addProjectMember = async (projectId: string, userId: string, reques
         throw new Error('Solo el líder del proyecto puede añadir miembros');
     }
 
-    // Verify user exists and is a regular user
+    // Verificar que el usuario existe y es un usuario regular
     const user = await prisma.user.findUnique({
         where: { id: userId },
     });
@@ -221,7 +221,7 @@ export const addProjectMember = async (projectId: string, userId: string, reques
 };
 
 /**
- * Remove member from project (project_head only)
+ * Eliminar miembro del proyecto (solo project_head)
  */
 export const removeProjectMember = async (projectId: string, userId: string, requesterId: string) => {
     const project = await prisma.project.findUnique({
@@ -232,15 +232,14 @@ export const removeProjectMember = async (projectId: string, userId: string, req
         throw new Error('Solo el líder del proyecto puede eliminar miembros');
     }
 
-    // 1. Remove member
+    // Eliminar miembro
     await prisma.projectMember.delete({
         where: {
             projectId_userId: { projectId, userId },
         },
     });
 
-    // 2. Revoke access to project files
-    // Find all files belonging to this project
+    // Revocar acceso a archivos del proyecto
     const projectFiles = await prisma.file.findMany({
         where: { projectId },
         select: { id: true },
@@ -261,7 +260,7 @@ export const removeProjectMember = async (projectId: string, userId: string, req
 };
 
 /**
- * Check if user has access to a project
+ * Verificar si el usuario tiene acceso a un proyecto
  */
 export const userHasProjectAccess = async (projectId: string, userId: string, userRole: string) => {
     const project = await prisma.project.findUnique({

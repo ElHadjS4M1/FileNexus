@@ -1,11 +1,11 @@
 import { prisma } from './prisma';
 
 /**
- * Create a new department (admin only)
- * Manager is optional - can be assigned later
+ * Crear un nuevo departamento (solo admin)
+ * El jefe es opcional - puede asignarse después
  */
 export const createDepartment = async (name: string, managerId?: string) => {
-    // If manager provided, verify they are a dept_head
+    // Si se proporciona jefe, verificar que sea un dept_head
     if (managerId) {
         const manager = await prisma.user.findUnique({
             where: { id: managerId },
@@ -27,10 +27,10 @@ export const createDepartment = async (name: string, managerId?: string) => {
 };
 
 /**
- * Update department manager (admin only)
+ * Actualizar jefe de departamento (solo admin)
  */
 export const updateDepartmentManager = async (departmentId: string, managerId: string | null) => {
-    // If assigning a manager, verify they are a dept_head
+    // Si se asigna un jefe, verificar que sea un dept_head
     if (managerId) {
         const manager = await prisma.user.findUnique({
             where: { id: managerId },
@@ -50,7 +50,7 @@ export const updateDepartmentManager = async (departmentId: string, managerId: s
 };
 
 /**
- * List all departments (admin sees all, dept_head sees their own)
+ * Listar todos los departamentos (admin ve todos, dept_head ve el suyo)
  */
 export const listDepartments = async (userId: string, userRole: string) => {
     if (userRole === 'admin') {
@@ -75,7 +75,7 @@ export const listDepartments = async (userId: string, userRole: string) => {
 };
 
 /**
- * Get department by ID
+ * Obtener departamento por ID
  */
 export const getDepartmentById = async (id: string) => {
     return prisma.department.findUnique({
@@ -93,7 +93,7 @@ export const getDepartmentById = async (id: string) => {
 };
 
 /**
- * Delete department (admin only)
+ * Eliminar departamento (solo admin)
  */
 export const deleteDepartment = async (id: string) => {
     return prisma.department.delete({

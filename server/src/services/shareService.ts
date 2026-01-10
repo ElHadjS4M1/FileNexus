@@ -8,7 +8,7 @@ export type ShareFileInput = {
 };
 
 /**
- * Creates a file share record.
+ * Crea un registro de archivo compartido.
  */
 export const shareFile = async (input: ShareFileInput) => {
     return prisma.fileShare.create({
@@ -25,7 +25,7 @@ export const shareFile = async (input: ShareFileInput) => {
 };
 
 /**
- * Gets files shared with a specific user.
+ * Obtiene archivos compartidos con un usuario específico.
  */
 export const getFilesSharedWithUser = async (userId: string) => {
     return prisma.fileShare.findMany({
@@ -43,10 +43,10 @@ export const getFilesSharedWithUser = async (userId: string) => {
 };
 
 /**
- * Gets all shares for a specific file (who it's shared with).
+ * Obtiene todos los compartidos para un archivo específico (con quién se comparte).
  */
 export const getFileShares = async (fileId: string, ownerId: string) => {
-    // Verify ownership first
+    // Verificar propiedad primero
     const file = await prisma.file.findFirst({
         where: { id: fileId, ownerId },
     });
@@ -63,10 +63,10 @@ export const getFileShares = async (fileId: string, ownerId: string) => {
 };
 
 /**
- * Revokes file share (removes access for a user).
+ * Revoca archivo compartido (elimina acceso para un usuario).
  */
 export const revokeFileShare = async (fileId: string, userId: string, ownerId: string) => {
-    // Verify ownership first
+    // Verificar propiedad primero
     const file = await prisma.file.findFirst({
         where: { id: fileId, ownerId },
     });
@@ -81,7 +81,7 @@ export const revokeFileShare = async (fileId: string, userId: string, ownerId: s
 };
 
 /**
- * Gets a specific share record for file access.
+ * Obtiene un registro de compartido específico para acceso a archivo.
  */
 export const getFileShareForUser = async (fileId: string, userId: string) => {
     return prisma.fileShare.findUnique({

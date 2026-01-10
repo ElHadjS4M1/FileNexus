@@ -40,7 +40,7 @@ export const authApi = {
 
     getMaterials: () => apiRequest("/me/keys/materials"),
 
-    // Check if current session is valid (returns user info if logged in)
+    // Comprobar si la sesión actual es válida (devuelve información del usuario si ha iniciado sesión)
     checkSession: async () => {
         try {
             return await apiRequest("/me");

@@ -2,7 +2,7 @@ import React from "react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-// Icons
+// Iconos
 const DashboardIcon = () => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <rect x="3" y="3" width="7" height="7" />
@@ -55,24 +55,24 @@ export default function Sidebar() {
     const isAdmin = user?.role === "admin";
     const isDeptHead = user?.role === "dept_head";
 
-    // Base items for all users
+    // Elementos base para todos los usuarios
     const baseItems = [
         { to: "/dashboard", label: "Dashboard", icon: <DashboardIcon /> },
     ];
 
-    // Admin-specific items
+    // Elementos específicos de administrador
     const adminItems = [
         { to: "/users", label: "Usuarios", icon: <UsersIcon /> },
         { to: "/team", label: "Departamentos", icon: <BuildingIcon /> },
     ];
 
-    // Dept head items
+    // Elementos de jefe de departamento
     const deptHeadItems = [
         { to: "/documents", label: "Mis documentos", icon: <DocumentsIcon /> },
         { to: "/team", label: "Proyectos", icon: <BuildingIcon /> },
     ];
 
-    // Regular user items
+    // Elementos de usuario regular
     const userItems = [
         { to: "/documents", label: "Mis documentos", icon: <DocumentsIcon /> },
         { to: "/team", label: "Mi equipo", icon: <TeamIcon /> },

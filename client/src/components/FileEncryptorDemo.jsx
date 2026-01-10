@@ -76,11 +76,11 @@ export default function FileCryptoDemo() {
   const [working, setWorking] = useState(false);
   const [filesStored, setFilesStored] = useState([]);
   const [loadingFiles, setLoadingFiles] = useState(false);
-  const [errorPopup, setErrorPopup] = useState(null); // For signature error popup
-  const [userProject, setUserProject] = useState(null); // User's team project
-  const [shareWithTeam, setShareWithTeam] = useState(false); // Checkbox state
+  const [errorPopup, setErrorPopup] = useState(null); // Para popup de error de firma
+  const [userProject, setUserProject] = useState(null); // Proyecto del equipo del usuario
+  const [shareWithTeam, setShareWithTeam] = useState(false); // Estado del checkbox
 
-  // Fetch user's project (if they belong to one)
+  // Obtener proyecto del usuario (si pertenece a uno)
   useEffect(() => {
     if (!user) {
       setUserProject(null);
@@ -151,7 +151,7 @@ export default function FileCryptoDemo() {
       const fileBuffer = await file.arrayBuffer();
       const hashC = await sha256Base64(fileBuffer);
 
-      // Sign the hash with private key
+      // Firmar el hash con clave privada
       let signatureBase64 = null;
       if (user.privateKeyPkcs8Base64) {
         console.log("Signing file with private key...");
@@ -179,7 +179,7 @@ export default function FileCryptoDemo() {
         console.log("Signature added to form data");
       }
 
-      // Handle team sharing
+      // Manejar compartir con equipo
       let encryptedKeysForTeam = [];
       if (shareWithTeam && userProject) {
         console.log("Sharing with team, fetching members' keys...");
@@ -256,7 +256,7 @@ export default function FileCryptoDemo() {
       const aesKey = await importAesKeyFromRawBase64(aesRawBase64);
       const fileBuf = await decryptFileWithAesGcm(payload.ciphertext, payload.aeadNonce, aesKey);
 
-      // Verify signature if present
+      // Verificar firma si está presente
       if (payload.signature && payload.ownerPublicKey) {
         console.log("Verifying signature in Dashboard...");
         try {
@@ -326,7 +326,7 @@ export default function FileCryptoDemo() {
             />
           </div>
 
-          {/* Share with Team checkbox - only shown if user belongs to a project */}
+          {/* Checkbox compartir con equipo - solo visible si el usuario pertenece a un proyecto */}
           {userProject && (
             <label className="flex items-center gap-3 px-4 py-3 bg-blue-50 border border-blue-200 rounded-xl cursor-pointer hover:bg-blue-100 transition">
               <input
@@ -405,7 +405,7 @@ export default function FileCryptoDemo() {
         </section>
       </div>
 
-      {/* Error Popup Modal */}
+      {/* Modal popup de error */}
       {errorPopup && (
         <div style={{
           position: "fixed",

@@ -23,7 +23,7 @@ const allowedOrigins = appEnv.CORS_ALLOWED_ORIGINS
  */
 export const buildCors = (): RequestHandler =>
   cors({
-    origin: (origin, callback) => {
+    origin: (origin: string | undefined, callback: (err: Error | null, origin?: string) => void) => {
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, origin ?? allowedOrigins[0]);
         return;

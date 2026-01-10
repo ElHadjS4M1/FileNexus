@@ -10,21 +10,21 @@ const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [sessionUser, setSessionUser] = useState(null); // User info from server (no keys)
-  const [loading, setLoading] = useState(true); // Loading session check
+  const [sessionUser, setSessionUser] = useState(null); // Información del usuario desde el servidor (sin claves)
+  const [loading, setLoading] = useState(true); // Cargando comprobación de sesión
 
-  // Check session on mount
+  // Comprobar sesión al montar
   useEffect(() => {
     async function checkSession() {
       try {
         const result = await authApi.checkSession();
-        // /me returns user object directly (not wrapped in {user: ...})
+        // /me devuelve el objeto de usuario directamente (no envuelto en {user: ...})
         if (result && result.id && result.username) {
-          // Session valid but keys not unlocked
+          // Sesión válida pero claves no desbloqueadas
           setSessionUser(result);
         }
       } catch {
-        // No valid session
+        // Sin sesión válida
       } finally {
         setLoading(false);
       }
@@ -42,7 +42,7 @@ export function AuthProvider({ children }) {
     });
   }
 
-  // Unlock keys with password (when session exists but keys not loaded)
+  // Desbloquear claves con contraseña (cuando existe sesión pero las claves no están cargadas)
   async function unlockWithPassword(password) {
     if (!sessionUser) {
       throw new Error("No hay sesión activa");
@@ -82,7 +82,7 @@ export function AuthProvider({ children }) {
     };
 
     setUser(finalUser);
-    setSessionUser(null); // Clear session user since we now have full user
+    setSessionUser(null); // Limpiar usuario de sesión ya que ahora tenemos el usuario completo
     return { success: true, user: finalUser };
   }
 
@@ -160,8 +160,8 @@ export function AuthProvider({ children }) {
     <AuthContext.Provider
       value={{
         user,
-        sessionUser, // For showing unlock screen
-        loading, // For showing loading state
+        sessionUser, // Para mostrar pantalla de desbloqueo
+        loading, // Para mostrar estado de carga
         login,
         logout,
         unlockWithPassword,

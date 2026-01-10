@@ -63,7 +63,7 @@ export default function Navbar() {
                 </span>
             </Link>
 
-            {/* User Menu */}
+            {/* Menú de usuario */}
             <div ref={dropdownRef} style={{ position: "relative" }}>
                 <button
                     onClick={() => setIsOpen(!isOpen)}
@@ -114,7 +114,7 @@ export default function Navbar() {
                     </svg>
                 </button>
 
-                {/* Dropdown */}
+                {/* Desplegable */}
                 {isOpen && (
                     <div style={{
                         position: "absolute",
@@ -128,7 +128,7 @@ export default function Navbar() {
                         zIndex: 1000,
                         animation: "slideDown 0.15s ease-out"
                     }}>
-                        {/* User info header */}
+                        {/* Encabezado de información de usuario */}
                         <div style={{
                             padding: "16px",
                             borderBottom: "1px solid #e5e5e5",
@@ -142,7 +142,7 @@ export default function Navbar() {
                             </div>
                         </div>
 
-                        {/* Menu items */}
+                        {/* Elementos del menú */}
                         <div style={{ padding: "8px 0" }}>
                             <Link
                                 to="/settings"

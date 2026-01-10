@@ -38,7 +38,7 @@ export default function AdminPanel() {
     );
   }
 
-  // Find max value for chart scaling
+  // Encontrar valor máximo para escala del gráfico
   const maxCount = stats?.userGrowth ? Math.max(...stats.userGrowth.map(d => d.count), 1) : 1;
 
   const roleColors = {
@@ -54,7 +54,7 @@ export default function AdminPanel() {
         <h1 style={{ fontSize: "28px", fontWeight: "700", marginBottom: "8px" }}>Dashboard</h1>
         <p style={{ color: "#666", marginBottom: "32px" }}>Resumen de actividad del sistema</p>
 
-        {/* Stats Cards */}
+        {/* Tarjetas de estadísticas */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "20px", marginBottom: "32px" }}>
           <div style={{ background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)", borderRadius: "16px", padding: "24px", color: "white" }}>
             <div style={{ fontSize: "14px", opacity: 0.9 }}>Total Usuarios</div>
@@ -66,7 +66,7 @@ export default function AdminPanel() {
           </div>
         </div>
 
-        {/* User Growth Chart */}
+        {/* Gráfico de crecimiento de usuarios */}
         <div style={{ background: "white", borderRadius: "16px", padding: "24px", marginBottom: "32px", boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
           <h2 style={{ fontSize: "18px", fontWeight: "600", marginBottom: "20px" }}>
             📈 Nuevos usuarios - Último mes
@@ -94,9 +94,9 @@ export default function AdminPanel() {
           </div>
         </div>
 
-        {/* Recent Tables */}
+        {/* Tablas recientes */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
-          {/* Recent Users */}
+          {/* Usuarios recientes */}
           <div style={{ background: "white", borderRadius: "16px", padding: "24px", boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
             <h2 style={{ fontSize: "18px", fontWeight: "600", marginBottom: "16px" }}>
               👤 Últimos 5 usuarios
@@ -135,7 +135,7 @@ export default function AdminPanel() {
             )}
           </div>
 
-          {/* Recent Departments */}
+          {/* Departamentos recientes */}
           <div style={{ background: "white", borderRadius: "16px", padding: "24px", boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
             <h2 style={{ fontSize: "18px", fontWeight: "600", marginBottom: "16px" }}>
               🏢 Últimos 5 departamentos

@@ -105,7 +105,7 @@ export async function sha256Base64(buffer) {
   return arrayBufferToBase64(hash);
 }
 
-// Import private key for signing (RSA-PSS)
+// Importar clave privada para firmar (RSA-PSS)
 export async function importPrivateKeyForSigning(pkcs8Base64) {
   const buf = base64ToArrayBuffer(pkcs8Base64);
   return await window.crypto.subtle.importKey(
@@ -117,9 +117,9 @@ export async function importPrivateKeyForSigning(pkcs8Base64) {
   );
 }
 
-// Import public key for verification (RSA-PSS) from JWK
+// Importar clave pública para verificación (RSA-PSS) desde JWK
 export async function importPublicKeyForVerification(jwk) {
-  // Modify JWK for RSA-PSS algorithm
+  // Modificar JWK para algoritmo RSA-PSS
   const pssJwk = { ...jwk, alg: "PS256" };
   return await window.crypto.subtle.importKey(
     "jwk",
@@ -130,7 +130,7 @@ export async function importPublicKeyForVerification(jwk) {
   );
 }
 
-// Sign a hash with private key
+// Firmar un hash con clave privada
 export async function signHash(hashBase64, signingKey) {
   const hashBuf = base64ToArrayBuffer(hashBase64);
   const signature = await window.crypto.subtle.sign(
@@ -141,7 +141,7 @@ export async function signHash(hashBase64, signingKey) {
   return arrayBufferToBase64(signature);
 }
 
-// Verify signature
+// Verificar firma
 export async function verifySignature(hashBase64, signatureBase64, verifyKey) {
   const hashBuf = base64ToArrayBuffer(hashBase64);
   const sigBuf = base64ToArrayBuffer(signatureBase64);
@@ -154,10 +154,10 @@ export async function verifySignature(hashBase64, signatureBase64, verifyKey) {
 }
 
 /**
- * Encrypt AES key for multiple recipients.
- * @param {string} aesRawBase64 - Base64 encoded raw AES key
- * @param {Array<{id: string, publicKeyJwk: object}>} recipients - Array of recipients with their public keys
- * @returns {Promise<Array<{userId: string, encryptedKey: string}>>} - Array of encrypted keys for each recipient
+ * Cifrar clave AES para múltiples destinatarios.
+ * @param {string} aesRawBase64 - Clave AES en bruto codificada en Base64
+ * @param {Array<{id: string, publicKeyJwk: object}>} recipients - Array de destinatarios con sus claves públicas
+ * @returns {Promise<Array<{userId: string, encryptedKey: string}>>} - Array de claves cifradas para cada destinatario
  */
 export async function encryptKeyForRecipients(aesRawBase64, recipients) {
   const encryptedKeys = [];

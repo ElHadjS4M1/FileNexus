@@ -8,7 +8,7 @@ import {
     encryptKeyForRecipients,
 } from "../utils/fileCryptoUtils";
 
-// Icons
+// Iconos
 const UsersIcon = () => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -37,20 +37,20 @@ export default function Team() {
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState("");
 
-    // Data
+    // Datos
     const [departments, setDepartments] = useState([]);
     const [myDepartment, setMyDepartment] = useState(null);
     const [myProject, setMyProject] = useState(null);
     const [projectFiles, setProjectFiles] = useState([]);
 
-    // Modals
+    // Modales
     const [showCreateDepartment, setShowCreateDepartment] = useState(false);
     const [showEditDepartment, setShowEditDepartment] = useState(null);
     const [showCreateProject, setShowCreateProject] = useState(false);
     const [showEditProject, setShowEditProject] = useState(null);
     const [showAddMember, setShowAddMember] = useState(false);
 
-    // Form state
+    // Estado del formulario
     const [newDeptName, setNewDeptName] = useState("");
     const [newDeptManager, setNewDeptManager] = useState("");
     const [editDeptManager, setEditDeptManager] = useState("");
@@ -139,7 +139,7 @@ export default function Team() {
         fetchData();
     }, [fetchData]);
 
-    // Search functions with unassigned filter
+    // Funciones de búsqueda con filtro de no asignados
     const searchUnassignedDeptHeads = async () => {
         try {
             const res = await fetch(`${API_BASE}/users/search?q=&role=dept_head&unassigned=true`, { credentials: "include" });
@@ -174,7 +174,7 @@ export default function Team() {
         } catch { /* ignore */ }
     };
 
-    // Handlers
+    // Manejadores
     const handleCreateDepartment = async () => {
         if (!newDeptName) return;
         try {
@@ -251,7 +251,7 @@ export default function Team() {
     const handleAddMember = async (userId) => {
         if (!myProject || !user?.privateKeyCryptoKey) return;
         try {
-            // 1. Add member to project
+            // Añadir miembro al proyecto
             const res = await fetch(`${API_BASE}/projects/${myProject.id}/members`, {
                 method: "POST", credentials: "include",
                 headers: { "Content-Type": "application/json" },
@@ -261,42 +261,42 @@ export default function Team() {
 
             setMessage("Miembro añadido. Compartiendo archivos del proyecto...");
 
-            // 2. Get new member's public key
+            // Obtener clave pública del nuevo miembro
             const keyRes = await fetch(`${API_BASE}/users/${userId}/publicKey`, { credentials: "include" });
             if (!keyRes.ok) throw new Error("No se pudo obtener la clave del usuario");
             const { publicKeyJwk } = await keyRes.json();
             const recipientPubKey = await importPublicKeyFromJwk(publicKeyJwk);
 
-            // 3. Get all project files
+            // Obtener todos los archivos del proyecto
             const filesRes = await fetch(`${API_BASE}/files/shared/project/${myProject.id}`, { credentials: "include" });
             if (filesRes.ok) {
                 const { files } = await filesRes.json();
 
-                // 4. Share each file with the new member
+                // Compartir cada archivo con el nuevo miembro
                 let sharedCount = 0;
                 for (const file of files) {
                     try {
                         let aesRawBase64;
 
-                        // Get file details to access the encrypted key
+                        // Obtener detalles del archivo para acceder a la clave cifrada
                         if (file.ownerUsername === user.username) {
-                            // I am the owner
+                            // Soy el propietario
                             const detailRes = await fetch(`${API_BASE}/files/${file.id}`, { credentials: "include" });
                             if (!detailRes.ok) continue;
                             const detail = await detailRes.json();
                             aesRawBase64 = await decryptAesKeyWithPrivateKey(detail.ekOwner, user.privateKeyCryptoKey);
                         } else {
-                            // Shared with me
+                            // Compartido conmigo
                             const shareRes = await fetch(`${API_BASE}/files/shared/${file.id}`, { credentials: "include" });
                             if (!shareRes.ok) continue;
                             const share = await shareRes.json();
                             aesRawBase64 = await decryptAesKeyWithPrivateKey(share.encryptedKey, user.privateKeyCryptoKey);
                         }
 
-                        // Encrypt for new member
+                        // Cifrar para el nuevo miembro
                         const encryptedKey = await encryptAesKeyWithPublicKey(aesRawBase64, recipientPubKey);
 
-                        // Share using share-with-team endpoint
+                        // Compartir usando el endpoint de compartir con equipo
                         await fetch(`${API_BASE}/files/${file.id}/share-with-team`, {
                             method: "POST",
                             credentials: "include",
@@ -334,13 +334,13 @@ export default function Team() {
         } catch (e) { setMessage(e.message); }
     };
 
-    // ========== RENDER ==========
+    // ========== RENDERIZADO ==========
 
     if (loading) {
         return <div style={{ padding: "40px", textAlign: "center", color: "#666" }}>Cargando...</div>;
     }
 
-    // ========== ADMIN VIEW ==========
+    // ========== VISTA DE ADMIN ==========
     if (user?.role === "admin") {
         return (
             <div style={{ padding: "40px" }}>
@@ -380,7 +380,7 @@ export default function Team() {
                     </div>
                 </div>
 
-                {/* Create Department Modal */}
+                {/* Modal de Crear Departamento */}
                 {showCreateDepartment && (
                     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
                         <div style={{ background: "white", borderRadius: "12px", padding: "32px", width: "400px" }}>
@@ -400,7 +400,7 @@ export default function Team() {
                     </div>
                 )}
 
-                {/* Assign Manager Modal */}
+                {/* Modal de Asignar Jefe */}
                 {showEditDepartment && (
                     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
                         <div style={{ background: "white", borderRadius: "12px", padding: "32px", width: "400px" }}>
@@ -422,7 +422,7 @@ export default function Team() {
         );
     }
 
-    // ========== DEPT_HEAD VIEW ==========
+    // ========== VISTA DE JEFE DE DEPARTAMENTO ==========
     if (user?.role === "dept_head") {
         return (
             <div style={{ padding: "40px" }}>
@@ -472,7 +472,7 @@ export default function Team() {
                     )}
                 </div>
 
-                {/* Create Project Modal */}
+                {/* Modal de Crear Proyecto */}
                 {showCreateProject && (
                     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
                         <div style={{ background: "white", borderRadius: "12px", padding: "32px", width: "400px" }}>
@@ -492,7 +492,7 @@ export default function Team() {
                     </div>
                 )}
 
-                {/* Assign Project Leader Modal */}
+                {/* Modal de Asignar Líder de Proyecto */}
                 {showEditProject && (
                     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
                         <div style={{ background: "white", borderRadius: "12px", padding: "32px", width: "400px" }}>
@@ -514,7 +514,7 @@ export default function Team() {
         );
     }
 
-    // ========== PROJECT_HEAD VIEW ==========
+    // ========== VISTA DE LÍDER DE PROYECTO ==========
     if (user?.role === "project_head") {
         return (
             <div style={{ padding: "40px" }}>
@@ -530,7 +530,7 @@ export default function Team() {
                         <p style={{ color: "#999" }}>No tienes un proyecto asignado.</p>
                     ) : (
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
-                            {/* Members */}
+                            {/* Miembros */}
                             <div style={{ background: "white", borderRadius: "12px", padding: "24px", boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
                                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
                                     <h2 style={{ fontSize: "18px", fontWeight: "600", display: "flex", alignItems: "center", gap: "8px" }}><UsersIcon /> Miembros</h2>
@@ -552,7 +552,7 @@ export default function Team() {
                                 )}
                             </div>
 
-                            {/* Recent Files */}
+                            {/* Archivos Recientes */}
                             <div style={{ background: "white", borderRadius: "12px", padding: "24px", boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
                                 <h2 style={{ fontSize: "18px", fontWeight: "600", marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}><FileIcon /> Últimos Archivos</h2>
                                 {projectFiles.length === 0 ? (
@@ -572,7 +572,7 @@ export default function Team() {
                     )}
                 </div>
 
-                {/* Add Member Modal */}
+                {/* Modal de Añadir Miembro */}
                 {showAddMember && (
                     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
                         <div style={{ background: "white", borderRadius: "12px", padding: "32px", width: "400px" }}>
@@ -597,7 +597,7 @@ export default function Team() {
         );
     }
 
-    // ========== USER VIEW ==========
+    // ========== VISTA DE USUARIO ==========
     return (
         <div style={{ padding: "40px" }}>
             <div style={{ maxWidth: "700px", margin: "0 auto" }}>
@@ -612,7 +612,7 @@ export default function Team() {
                     </div>
                 ) : (
                     <div style={{ display: "grid", gap: "24px" }}>
-                        {/* Project Info */}
+                        {/* Info del Proyecto */}
                         <div style={{ background: "linear-gradient(135deg, #0a6ed1 0%, #0052a3 100%)", borderRadius: "16px", padding: "24px", color: "white" }}>
                             <div style={{ fontSize: "14px", opacity: 0.9 }}>Mi Proyecto</div>
                             <div style={{ fontSize: "24px", fontWeight: "700", marginTop: "4px" }}>{myProject.name}</div>
@@ -621,9 +621,9 @@ export default function Team() {
                             </div>
                         </div>
 
-                        {/* Two column layout */}
+                        {/* Diseño de dos columnas */}
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
-                            {/* Team Members */}
+                            {/* Miembros del Equipo */}
                             <div style={{ background: "white", borderRadius: "16px", padding: "24px", boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
                                 <h2 style={{ fontSize: "18px", fontWeight: "600", marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
                                     👥 Compañeros de Equipo
@@ -647,7 +647,7 @@ export default function Team() {
                                 )}
                             </div>
 
-                            {/* Shared Files */}
+                            {/* Archivos Compartidos */}
                             <div style={{ background: "white", borderRadius: "16px", padding: "24px", boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
                                 <h2 style={{ fontSize: "18px", fontWeight: "600", marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
                                     🔗 Últimos 5 compartidos

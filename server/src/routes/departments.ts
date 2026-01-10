@@ -14,7 +14,7 @@ const router = Router();
 
 router.use(authenticate);
 
-// Stats for dept_head dashboard
+// Estadísticas para el panel de dept_head
 router.get('/stats', async (req, res, next) => {
     try {
         if (!req.authUser) {
@@ -24,7 +24,7 @@ router.get('/stats', async (req, res, next) => {
             throw new HttpError(403, 'Solo dept_head puede acceder');
         }
 
-        // Get the department managed by this user
+        // Obtener el departamento gestionado por este usuario
         const department = await prisma.department.findUnique({
             where: { managerId: req.authUser.id },
         });
@@ -43,7 +43,7 @@ router.get('/stats', async (req, res, next) => {
         const now = new Date();
         const twentyNineDaysAgo = new Date(now.getTime() - 29 * 24 * 60 * 60 * 1000);
 
-        // Get projects in this department created in last 30 days (including today)
+        // Obtener proyectos en este departamento creados en los últimos 30 días (incluyendo hoy)
         const projects = await prisma.project.findMany({
             where: {
                 departmentId: department.id,
@@ -53,7 +53,7 @@ router.get('/stats', async (req, res, next) => {
             orderBy: { createdAt: 'asc' },
         });
 
-        // Group by day (29 days ago to today = 30 days)
+        // Agrupar por día (hace 29 días hasta hoy = 30 días)
         const projectGrowth: Record<string, number> = {};
         for (let i = 0; i < 30; i++) {
             const d = new Date(twentyNineDaysAgo.getTime() + i * 24 * 60 * 60 * 1000);
@@ -65,7 +65,7 @@ router.get('/stats', async (req, res, next) => {
             if (projectGrowth[key] !== undefined) projectGrowth[key]++;
         });
 
-        // Last 5 projects in department
+        // Últimos 5 proyectos en el departamento
         const recentProjects = await prisma.project.findMany({
             where: { departmentId: department.id },
             orderBy: { createdAt: 'desc' },
@@ -73,13 +73,13 @@ router.get('/stats', async (req, res, next) => {
             include: { leader: { select: { username: true } } },
         });
 
-        // Get project IDs in this department
+        // Obtener IDs de proyectos en este departamento
         const projectIds = (await prisma.project.findMany({
             where: { departmentId: department.id },
             select: { id: true },
         })).map((p: { id: string }) => p.id);
 
-        // Last 5 files: owned by dept_head OR in department projects
+        // Últimos 5 archivos: propiedad del dept_head O en proyectos del departamento
         const recentFiles = await prisma.file.findMany({
             where: {
                 OR: [
@@ -118,7 +118,7 @@ router.get('/stats', async (req, res, next) => {
     }
 });
 
-// Create department (admin only) - manager is optional
+// Crear departamento (solo admin) - el jefe es opcional
 router.post('/', async (req, res, next) => {
     try {
         if (!req.authUser) {
@@ -140,7 +140,7 @@ router.post('/', async (req, res, next) => {
     }
 });
 
-// List departments
+// Listar departamentos
 router.get('/', async (req, res, next) => {
     try {
         if (!req.authUser) {
@@ -154,7 +154,7 @@ router.get('/', async (req, res, next) => {
     }
 });
 
-// Get department by ID
+// Obtener departamento por ID
 router.get('/:id', async (req, res, next) => {
     try {
         if (!req.authUser) {
@@ -166,7 +166,7 @@ router.get('/:id', async (req, res, next) => {
             throw new HttpError(404, 'Departamento no encontrado');
         }
 
-        // Check access
+        // Verificar acceso
         if (req.authUser.role !== 'admin' && department.managerId !== req.authUser.id) {
             throw new HttpError(403, 'No tienes acceso a este departamento');
         }
@@ -177,7 +177,7 @@ router.get('/:id', async (req, res, next) => {
     }
 });
 
-// Update department manager (admin only)
+// Actualizar jefe de departamento (solo admin)
 router.patch('/:id', async (req, res, next) => {
     try {
         if (!req.authUser) {
@@ -195,7 +195,7 @@ router.patch('/:id', async (req, res, next) => {
     }
 });
 
-// Delete department (admin only)
+// Eliminar departamento (solo admin)
 router.delete('/:id', async (req, res, next) => {
     try {
         if (!req.authUser) {

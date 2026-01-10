@@ -38,7 +38,7 @@ export default function DeptHeadPanel() {
         );
     }
 
-    // Find max value for chart scaling
+    // Encontrar valor máximo para escala del gráfico
     const maxCount = stats?.projectGrowth ? Math.max(...stats.projectGrowth.map(d => d.count), 1) : 1;
 
     return (
@@ -49,7 +49,7 @@ export default function DeptHeadPanel() {
                 </h1>
                 <p style={{ color: "#666", marginBottom: "32px" }}>Dashboard de tu departamento</p>
 
-                {/* Stats Cards */}
+                {/* Tarjetas de estadísticas */}
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "20px", marginBottom: "32px" }}>
                     <div style={{ background: "linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)", borderRadius: "16px", padding: "24px", color: "white" }}>
                         <div style={{ fontSize: "14px", opacity: 0.9 }}>Total Proyectos</div>
@@ -61,7 +61,7 @@ export default function DeptHeadPanel() {
                     </div>
                 </div>
 
-                {/* Project Growth Chart */}
+                {/* Gráfico de crecimiento de proyectos */}
                 <div style={{ background: "white", borderRadius: "16px", padding: "24px", marginBottom: "32px", boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
                     <h2 style={{ fontSize: "18px", fontWeight: "600", marginBottom: "20px" }}>
                         📈 Nuevos proyectos - Último mes
@@ -89,9 +89,9 @@ export default function DeptHeadPanel() {
                     </div>
                 </div>
 
-                {/* Recent Tables */}
+                {/* Tablas recientes */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
-                    {/* Recent Projects */}
+                    {/* Proyectos recientes */}
                     <div style={{ background: "white", borderRadius: "16px", padding: "24px", boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
                         <h2 style={{ fontSize: "18px", fontWeight: "600", marginBottom: "16px" }}>
                             📁 Últimos 5 proyectos
@@ -124,7 +124,7 @@ export default function DeptHeadPanel() {
                         )}
                     </div>
 
-                    {/* Recent Documents */}
+                    {/* Documentos recientes */}
                     <div style={{ background: "white", borderRadius: "16px", padding: "24px", boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
                         <h2 style={{ fontSize: "18px", fontWeight: "600", marginBottom: "16px" }}>
                             📄 Últimos 5 documentos
