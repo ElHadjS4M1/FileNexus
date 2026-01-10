@@ -1,4 +1,5 @@
 import express from 'express';
+import path from 'path';
 import cookieParser from 'cookie-parser';
 import pinoHttp from 'pino-http';
 import { buildCors, buildHelmet, buildRateLimiter } from './middleware/security';
@@ -21,6 +22,19 @@ export const createApp = (): express.Express => {
   app.use(express.json({ limit: '50mb' }));
 
   registerRoutes(app);
+
+  // Serve static files from client/dist
+  const clientDistPath = path.join(__dirname, '../../client/dist');
+  app.use(express.static(clientDistPath));
+
+  // SPA fallback
+  app.get('*', (req, res, next) => {
+    if (req.accepts('html')) {
+      res.sendFile(path.join(clientDistPath, 'index.html'));
+    } else {
+      next();
+    }
+  });
 
   app.use(errorHandler);
 

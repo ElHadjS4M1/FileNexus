@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: protectinfo-monorepo
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm run start --workspace server
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_PRIVATE_KEY_PATH
+        value: /etc/secrets/jwt_private_key.pem
+      - key: JWT_PUBLIC_KEY_PATH
+        value: /etc/secrets/jwt_public_key.pem
+      - key: DATABASE_URL
+        fromDatabase:
+          name: protectinfo-db
+          property: connectionString
+      - key: SERVER_KEK_SECRET
+        generateValue: true
+
+databases:
+  - name: protectinfo-db
+    databaseName: protectinfo
+    user: protectinfo_user
