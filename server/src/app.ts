@@ -24,26 +24,53 @@ export const createApp = (): express.Express => {
   registerRoutes(app);
 
   // Serve static files from client/dist
-  const clientDistPath = path.join(__dirname, '../../client/dist');
-  logger.info({ clientDistPath }, 'Serving static files from path');
+  // Assuming process.cwd() is the server root (where package.json is)
+  // Structure:
+  // /opt/render/project/src/server (cwd)
+  // /opt/render/project/src/client/dist
+  const clientDistPath = path.join(process.cwd(), '../client/dist');
 
-  // Debug: List files in clientDistPath
-  import('fs').then(fs => {
-    fs.readdir(clientDistPath, (err, files) => {
-      if (err) {
-        logger.error({ err }, 'Failed to list client dist files');
-      } else {
-        logger.info({ files }, 'Files in client dist');
-      }
-    });
-  });
+  logger.info({ clientDistPath, cwd: process.cwd() }, 'Configuring static file serving');
 
   app.use(express.static(clientDistPath));
+
+  // Debug endpoint to check deployment paths
+  app.get('/api/debug/deployment', (req, res) => {
+    const fs = require('fs');
+    let files: string[] = [];
+    let error: string | undefined;
+
+    try {
+      if (fs.existsSync(clientDistPath)) {
+        files = fs.readdirSync(clientDistPath);
+      } else {
+        error = 'Directory does not exist';
+      }
+    } catch (e: any) {
+      error = e.message;
+    }
+
+    res.json({
+      cwd: process.cwd(),
+      __dirname,
+      clientDistPath,
+      files,
+      error,
+      env: process.env.NODE_ENV
+    });
+  });
 
   // SPA fallback
   app.get('*', (req, res, next) => {
     if (req.accepts('html')) {
-      res.sendFile(path.join(clientDistPath, 'index.html'));
+      const indexPath = path.join(clientDistPath, 'index.html');
+      if (require('fs').existsSync(indexPath)) {
+        res.sendFile(indexPath);
+      } else {
+        // If index.html doesn't exist, we can't serve the SPA. 
+        // Fall through to 404 to avoid confusing MIME type errors.
+        next();
+      }
     } else {
       next();
     }
@@ -51,8 +78,10 @@ export const createApp = (): express.Express => {
 
   // 404 Handler
   app.use((req, res) => {
+    // If we got here, it's a 404.
+    // If it was a request for assets (js/css), return 404.
     logger.warn({ url: req.url }, 'Route not found');
-    res.status(404).json({ error: 'Not Found' });
+    res.status(404).json({ error: 'Not Found', path: req.url });
   });
 
   app.use(errorHandler);
