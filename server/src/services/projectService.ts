@@ -164,7 +164,7 @@ export const getProjectForUser = async (projectId: string, userId: string, userR
         userRole === 'admin' ||
         project.department.managerId === userId ||
         project.leaderId === userId ||
-        project.members.some((m) => m.userId === userId);
+        project.members.some((m: { userId: string }) => m.userId === userId);
 
     if (!hasAccess) return null;
 
@@ -245,7 +245,7 @@ export const removeProjectMember = async (projectId: string, userId: string, req
         select: { id: true },
     });
 
-    const fileIds = projectFiles.map(f => f.id);
+    const fileIds = projectFiles.map((f: { id: string }) => f.id);
 
     if (fileIds.length > 0) {
         await prisma.fileShare.deleteMany({
@@ -277,6 +277,6 @@ export const userHasProjectAccess = async (projectId: string, userId: string, us
         userRole === 'admin' ||
         project.department.managerId === userId ||
         project.leaderId === userId ||
-        project.members.some((m) => m.userId === userId)
+        project.members.some((m: { userId: string }) => m.userId === userId)
     );
 };
