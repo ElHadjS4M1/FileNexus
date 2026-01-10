@@ -25,6 +25,19 @@ export const createApp = (): express.Express => {
 
   // Serve static files from client/dist
   const clientDistPath = path.join(__dirname, '../../client/dist');
+  logger.info({ clientDistPath }, 'Serving static files from path');
+
+  // Debug: List files in clientDistPath
+  import('fs').then(fs => {
+    fs.readdir(clientDistPath, (err, files) => {
+      if (err) {
+        logger.error({ err }, 'Failed to list client dist files');
+      } else {
+        logger.info({ files }, 'Files in client dist');
+      }
+    });
+  });
+
   app.use(express.static(clientDistPath));
 
   // SPA fallback
@@ -34,6 +47,12 @@ export const createApp = (): express.Express => {
     } else {
       next();
     }
+  });
+
+  // 404 Handler
+  app.use((req, res) => {
+    logger.warn({ url: req.url }, 'Route not found');
+    res.status(404).json({ error: 'Not Found' });
   });
 
   app.use(errorHandler);
