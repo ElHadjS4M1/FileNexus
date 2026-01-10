@@ -28,6 +28,7 @@ export const buildCors = (): RequestHandler =>
         callback(null, origin ?? allowedOrigins[0]);
         return;
       }
+      console.warn(`Blocked by CORS: ${origin}`);
       callback(new Error('Not allowed by CORS'));
     },
     credentials: true,

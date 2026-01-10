@@ -24,11 +24,9 @@ export const createApp = (): express.Express => {
   registerRoutes(app);
 
   // Serve static files from client/dist
-  // Assuming process.cwd() is the server root (where package.json is)
-  // Structure:
-  // /opt/render/project/src/server (cwd)
-  // /opt/render/project/src/client/dist
-  const clientDistPath = path.join(process.cwd(), '../client/dist');
+  // Use path.resolve for absolute path resolution relative to this file
+  // src/app.ts -> ../../client/dist
+  const clientDistPath = path.resolve(__dirname, '../../client/dist');
 
   logger.info({ clientDistPath, cwd: process.cwd() }, 'Configuring static file serving');
 
