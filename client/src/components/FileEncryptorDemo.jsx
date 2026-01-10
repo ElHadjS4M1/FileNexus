@@ -13,6 +13,7 @@ import {
   arrayBufferToBase64,
   importPrivateKeyForSigning,
   signHash,
+  encryptKeyForRecipients,
 } from "../utils/fileCryptoUtils";
 
 const UploadIcon = ({ size = 24, className = "" }) => (
@@ -76,6 +77,35 @@ export default function FileCryptoDemo() {
   const [filesStored, setFilesStored] = useState([]);
   const [loadingFiles, setLoadingFiles] = useState(false);
   const [errorPopup, setErrorPopup] = useState(null); // For signature error popup
+  const [userProject, setUserProject] = useState(null); // User's team project
+  const [shareWithTeam, setShareWithTeam] = useState(false); // Checkbox state
+
+  // Fetch user's project (if they belong to one)
+  useEffect(() => {
+    if (!user) {
+      setUserProject(null);
+      return;
+    }
+    const fetchProject = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/projects`, { credentials: "include" });
+        console.log("Projects fetch response:", res.status);
+        if (res.ok) {
+          const data = await res.json();
+          console.log("Projects data:", data);
+          if (data.projects && data.projects.length > 0) {
+            setUserProject(data.projects[0]);
+            console.log("Set userProject:", data.projects[0]);
+          } else {
+            console.log("No projects found for user");
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching projects:", err);
+      }
+    };
+    fetchProject();
+  }, [user]);
 
   const fetchFiles = useCallback(async () => {
     if (!user) {
@@ -148,6 +178,29 @@ export default function FileCryptoDemo() {
         formData.append("signature", signatureBase64);
         console.log("Signature added to form data");
       }
+
+      // Handle team sharing
+      let encryptedKeysForTeam = [];
+      if (shareWithTeam && userProject) {
+        console.log("Sharing with team, fetching members' keys...");
+        try {
+          const keysRes = await fetch(`${API_BASE}/projects/${userProject.id}/members/keys`, {
+            credentials: "include",
+          });
+          if (keysRes.ok) {
+            const keysData = await keysRes.json();
+            if (keysData.recipients && keysData.recipients.length > 0) {
+              encryptedKeysForTeam = await encryptKeyForRecipients(aesRaw, keysData.recipients);
+              console.log(`Encrypted key for ${encryptedKeysForTeam.length} team members`);
+            }
+          }
+        } catch (teamErr) {
+          console.error("Error sharing with team:", teamErr);
+        }
+        formData.append("projectId", userProject.id);
+        formData.append("encryptedKeys", JSON.stringify(encryptedKeysForTeam));
+      }
+
       formData.append(
         "meta",
         JSON.stringify({
@@ -272,6 +325,22 @@ export default function FileCryptoDemo() {
               className="w-full text-sm text-gray-700 cursor-pointer"
             />
           </div>
+
+          {/* Share with Team checkbox - only shown if user belongs to a project */}
+          {userProject && (
+            <label className="flex items-center gap-3 px-4 py-3 bg-blue-50 border border-blue-200 rounded-xl cursor-pointer hover:bg-blue-100 transition">
+              <input
+                type="checkbox"
+                checked={shareWithTeam}
+                onChange={(e) => setShareWithTeam(e.target.checked)}
+                className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+              />
+              <span className="text-sm font-medium text-blue-800">
+                🔗 Compartir con mi equipo ({userProject.name})
+              </span>
+            </label>
+          )}
+
           <div className="flex flex-wrap justify-center gap-4">
             <button
               type="button"
@@ -279,7 +348,7 @@ export default function FileCryptoDemo() {
               disabled={working}
               className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white font-semibold rounded-xl shadow hover:bg-indigo-700 transition disabled:opacity-60"
             >
-              <UploadIcon size={18} /> Cifrar y subir
+              <UploadIcon size={18} /> {shareWithTeam ? "Cifrar y compartir" : "Cifrar y subir"}
             </button>
             <button
               type="button"

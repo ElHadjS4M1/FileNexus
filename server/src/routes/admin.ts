@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { authenticate, requireRole } from '../middleware/auth';
 import { createPendingUser, listUsers } from '../services/userService';
+import { prisma } from '../services/prisma';
 
 const createUserSchema = z.object({
   username: z.string().min(3).max(32),
@@ -16,6 +17,62 @@ export const adminRouter = Router();
  * @returns {void}
  */
 const register = (): void => {
+  // Stats endpoint for dashboard
+  adminRouter.get(
+    '/stats',
+    authenticate,
+    requireRole(['admin']),
+    async (_req, res, next) => {
+      try {
+        const now = new Date();
+        const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+        // Get users created in last 30 days grouped by day
+        const users = await prisma.user.findMany({
+          where: { createdAt: { gte: thirtyDaysAgo } },
+          select: { createdAt: true },
+          orderBy: { createdAt: 'asc' },
+        });
+
+        // Group by day
+        const userGrowth: Record<string, number> = {};
+        for (let i = 0; i < 30; i++) {
+          const d = new Date(thirtyDaysAgo.getTime() + i * 24 * 60 * 60 * 1000);
+          const key = d.toISOString().split('T')[0];
+          userGrowth[key] = 0;
+        }
+        users.forEach(u => {
+          const key = u.createdAt.toISOString().split('T')[0];
+          if (userGrowth[key] !== undefined) userGrowth[key]++;
+        });
+
+        // Last 5 users
+        const recentUsers = await prisma.user.findMany({
+          orderBy: { createdAt: 'desc' },
+          take: 5,
+          select: { id: true, username: true, role: true, status: true, createdAt: true },
+        });
+
+        // Last 5 departments
+        const recentDepartments = await prisma.department.findMany({
+          orderBy: { createdAt: 'desc' },
+          take: 5,
+          include: { manager: { select: { username: true } } },
+        });
+
+        res.json({
+          userGrowth: Object.entries(userGrowth).map(([date, count]) => ({ date, count })),
+          recentUsers,
+          recentDepartments,
+          totalUsers: await prisma.user.count(),
+          totalDepartments: await prisma.department.count(),
+        });
+      } catch (error) {
+        next(error);
+      }
+    },
+  );
+
   adminRouter.get(
     '/users',
     authenticate,
@@ -53,3 +110,4 @@ const register = (): void => {
 };
 
 register();
+

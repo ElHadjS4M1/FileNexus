@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useMemo } from "react";
+import React, { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE } from "../api/auth.api";
 import {
@@ -8,6 +8,14 @@ import {
     sha256Base64,
     importPublicKeyForVerification,
     verifySignature,
+    encryptFileWithAesGcm,
+    exportAesKeyRawBase64,
+    importPublicKeyFromPem,
+    encryptAesKeyWithPublicKey,
+    arrayBufferToBase64,
+    importPrivateKeyForSigning,
+    signHash,
+    encryptKeyForRecipients,
 } from "../utils/fileCryptoUtils";
 import ShareDialog from "./ShareDialog";
 
@@ -19,7 +27,12 @@ export default function Documents() {
     const [sharedFiles, setSharedFiles] = useState([]);
     const [loading, setLoading] = useState(false);
     const [shareFile, setShareFile] = useState(null);
-    const [errorPopup, setErrorPopup] = useState(null); // For signature error popup
+    const [errorPopup, setErrorPopup] = useState(null);
+    const [uploadFile, setUploadFile] = useState(null);
+    const [showUploadModal, setShowUploadModal] = useState(false);
+    const fileInputRef = useRef(null);
+    const [userProject, setUserProject] = useState(null);
+    const [shareWithTeam, setShareWithTeam] = useState(false);
 
     // Search, sort, pagination state
     const [searchQuery, setSearchQuery] = useState("");
@@ -27,6 +40,28 @@ export default function Documents() {
     const [sortDirection, setSortDirection] = useState("desc");
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
+
+    // Fetch user's project (if they belong to one)
+    useEffect(() => {
+        if (!user) {
+            setUserProject(null);
+            return;
+        }
+        const fetchProject = async () => {
+            try {
+                const res = await fetch(`${API_BASE}/projects`, { credentials: "include" });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.projects && data.projects.length > 0) {
+                        setUserProject(data.projects[0]);
+                    }
+                }
+            } catch {
+                // ignore
+            }
+        };
+        fetchProject();
+    }, [user]);
 
     const fetchFiles = useCallback(async () => {
         if (!user) {
@@ -59,6 +94,92 @@ export default function Documents() {
     useEffect(() => {
         fetchFiles().catch(() => undefined);
     }, [fetchFiles]);
+
+    // Handle file upload with encryption
+    const handleUpload = async () => {
+        if (!uploadFile) {
+            setMessage("Selecciona un archivo primero.");
+            return;
+        }
+        if (!user || !user.publicKeyPEM) {
+            setMessage("Debes tener claves inicializadas.");
+            return;
+        }
+        setWorking(true);
+        try {
+            const meta = await encryptFileWithAesGcm(uploadFile);
+            const aesRaw = await exportAesKeyRawBase64(meta.aesKey);
+            const publicKey = await importPublicKeyFromPem(user.publicKeyPEM);
+            const wrappedKey = await encryptAesKeyWithPublicKey(aesRaw, publicKey);
+            const fileBuffer = await uploadFile.arrayBuffer();
+            const hashC = await sha256Base64(fileBuffer);
+
+            // Sign the hash with private key
+            let signatureBase64 = null;
+            if (user.privateKeyPkcs8Base64) {
+                const signingKey = await importPrivateKeyForSigning(user.privateKeyPkcs8Base64);
+                signatureBase64 = await signHash(hashC, signingKey);
+            }
+
+            const ciphertextBlob = new Blob([meta.ciphertext], { type: "application/octet-stream" });
+            const formData = new FormData();
+            formData.append("ciphertext", ciphertextBlob, `${uploadFile.name}.enc`);
+            formData.append("filename", uploadFile.name);
+            formData.append("sizeBytes", String(uploadFile.size));
+            formData.append("aeadNonce", arrayBufferToBase64(meta.iv.buffer));
+            formData.append("ekOwner", wrappedKey);
+            formData.append("hashC", hashC);
+            if (signatureBase64) {
+                formData.append("signature", signatureBase64);
+            }
+
+            // Handle team sharing
+            let encryptedKeysForTeam = [];
+            if (shareWithTeam && userProject) {
+                try {
+                    const keysRes = await fetch(`${API_BASE}/projects/${userProject.id}/members/keys`, {
+                        credentials: "include",
+                    });
+                    if (keysRes.ok) {
+                        const keysData = await keysRes.json();
+                        if (keysData.recipients && keysData.recipients.length > 0) {
+                            encryptedKeysForTeam = await encryptKeyForRecipients(aesRaw, keysData.recipients);
+                        }
+                    }
+                } catch (teamErr) {
+                    console.error("Error sharing with team:", teamErr);
+                }
+                formData.append("projectId", userProject.id);
+                formData.append("encryptedKeys", JSON.stringify(encryptedKeysForTeam));
+            }
+
+            formData.append("meta", JSON.stringify({
+                mimeType: meta.mimeType,
+                originalName: uploadFile.name,
+                recipients: [{ id: user.username, encryptedAesKeyBase64: wrappedKey, publicKeyPEM: user.publicKeyPEM }],
+            }));
+
+            const response = await fetch(`${API_BASE}/files`, {
+                method: "POST",
+                credentials: "include",
+                body: formData,
+            });
+            if (!response.ok) {
+                const body = await response.json().catch(() => ({}));
+                throw new Error(body.error ?? "Error al subir el documento.");
+            }
+
+            setUploadFile(null);
+            setShareWithTeam(false);
+            if (fileInputRef.current) fileInputRef.current.value = "";
+            setMessage(shareWithTeam ? "Documento compartido con el equipo." : "Documento cifrado y subido correctamente.");
+            await fetchFiles();
+        } catch (error) {
+            setMessage(error.message ?? "Error durante la subida.");
+        } finally {
+            setWorking(false);
+        }
+    };
 
     // Combine and process files
     const allFiles = useMemo(() => {
@@ -176,6 +297,52 @@ export default function Documents() {
         }
     };
 
+    // Share existing file with team
+    const handleShareWithTeam = async (file) => {
+        if (!user || !user.privateKeyCryptoKey || !userProject) {
+            setMessage("Debes tener el proyecto y clave privada para compartir.");
+            return;
+        }
+        setWorking(true);
+        try {
+            // 1. Get the file's encrypted key (ekOwner)
+            const fileRes = await fetch(`${API_BASE}/files/${file.id}`, { credentials: "include" });
+            if (!fileRes.ok) throw new Error("No se pudo obtener el archivo.");
+            const payload = await fileRes.json();
+
+            // 2. Decrypt the AES key with user's private key
+            const aesRawBase64 = await decryptAesKeyWithPrivateKey(payload.ekOwner, user.privateKeyCryptoKey);
+
+            // 3. Get team members' public keys
+            const keysRes = await fetch(`${API_BASE}/projects/${userProject.id}/members/keys`, { credentials: "include" });
+            if (!keysRes.ok) throw new Error("No se pudieron obtener las claves del equipo.");
+            const keysData = await keysRes.json();
+
+            // 4. Encrypt the AES key for each team member
+            const encryptedKeys = await encryptKeyForRecipients(aesRawBase64, keysData.recipients || []);
+
+            // 5. Send to server
+            const shareRes = await fetch(`${API_BASE}/files/${file.id}/share-with-team`, {
+                method: "POST",
+                credentials: "include",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    projectId: userProject.id,
+                    encryptedKeys,
+                }),
+            });
+            if (!shareRes.ok) throw new Error("Error al compartir con el equipo.");
+
+            const result = await shareRes.json();
+            setMessage(`Documento compartido con ${result.sharesCreated} miembros del equipo.`);
+            await fetchFiles();
+        } catch (error) {
+            setMessage(error.message || "Error al compartir con el equipo.");
+        } finally {
+            setWorking(false);
+        }
+    };
+
     const formatBytes = (bytes) => {
         if (bytes === 0) return "0 B";
         const k = 1024;
@@ -209,7 +376,7 @@ export default function Documents() {
                     </p>
                 )}
 
-                {/* Search and Refresh */}
+                {/* Search, Upload and Refresh */}
                 <div style={{ display: "flex", gap: "12px", marginBottom: "16px" }}>
                     <div style={{ position: "relative", flex: 1 }}>
                         <svg style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)" }} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#999" strokeWidth="2">
@@ -230,6 +397,29 @@ export default function Documents() {
                             }}
                         />
                     </div>
+                    <button
+                        onClick={() => setShowUploadModal(true)}
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            padding: "10px 16px",
+                            background: "#0a6ed1",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "8px",
+                            fontSize: "14px",
+                            fontWeight: "500",
+                            cursor: "pointer"
+                        }}
+                    >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="17 8 12 3 7 8" />
+                            <line x1="12" y1="3" x2="12" y2="15" />
+                        </svg>
+                        Subir
+                    </button>
                     <button
                         onClick={() => fetchFiles()}
                         disabled={loading}
@@ -414,7 +604,9 @@ export default function Documents() {
                     onShare={(sharedUser) => {
                         setMessage(`Documento compartido con ${sharedUser.username}`);
                         setShareFile(null);
+                        fetchFiles();
                     }}
+                    userProject={userProject}
                 />
             )}
 
@@ -477,6 +669,87 @@ export default function Documents() {
                         >
                             Cerrar
                         </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Upload Modal */}
+            {showUploadModal && (
+                <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
+                    <div style={{ background: "white", borderRadius: "16px", padding: "32px", width: "450px", textAlign: "center" }}>
+                        <h3 style={{ fontSize: "20px", fontWeight: "600", marginBottom: "8px" }}>Subir Documento</h3>
+                        <p style={{ fontSize: "14px", color: "#666", marginBottom: "24px" }}>
+                            El archivo será cifrado y firmado automáticamente.
+                        </p>
+                        <div style={{ padding: "24px", border: "2px dashed #ddd", borderRadius: "12px", marginBottom: "16px", background: "#f9fafb" }}>
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                                style={{ width: "100%" }}
+                            />
+                            {uploadFile && (
+                                <p style={{ marginTop: "12px", fontSize: "14px", color: "#0a6ed1", fontWeight: "500" }}>
+                                    Archivo seleccionado: {uploadFile.name}
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Team sharing checkbox */}
+                        {userProject && (
+                            <label style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "12px",
+                                padding: "16px",
+                                background: shareWithTeam ? "#dbeafe" : "#f0fdf4",
+                                border: shareWithTeam ? "1px solid #3b82f6" : "1px solid #86efac",
+                                borderRadius: "12px",
+                                marginBottom: "24px",
+                                cursor: "pointer",
+                                transition: "all 0.2s"
+                            }}>
+                                <input
+                                    type="checkbox"
+                                    checked={shareWithTeam}
+                                    onChange={(e) => setShareWithTeam(e.target.checked)}
+                                    style={{ width: "20px", height: "20px" }}
+                                />
+                                <div style={{ textAlign: "left" }}>
+                                    <div style={{ fontSize: "14px", fontWeight: "600", color: shareWithTeam ? "#1d4ed8" : "#166534" }}>
+                                        🔗 Compartir con mi equipo
+                                    </div>
+                                    <div style={{ fontSize: "12px", color: "#666" }}>
+                                        Proyecto: {userProject.name}
+                                    </div>
+                                </div>
+                            </label>
+                        )}
+
+                        <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
+                            <button
+                                onClick={() => { setShowUploadModal(false); setUploadFile(null); setShareWithTeam(false); if (fileInputRef.current) fileInputRef.current.value = ""; }}
+                                style={{ padding: "12px 24px", background: "#f3f4f6", border: "none", borderRadius: "8px", fontSize: "14px", cursor: "pointer" }}
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={async () => { await handleUpload(); setShowUploadModal(false); }}
+                                disabled={!uploadFile || working}
+                                style={{
+                                    padding: "12px 24px",
+                                    background: uploadFile && !working ? (shareWithTeam ? "#3b82f6" : "#0a6ed1") : "#d1d5db",
+                                    color: "white",
+                                    border: "none",
+                                    borderRadius: "8px",
+                                    fontSize: "14px",
+                                    fontWeight: "500",
+                                    cursor: uploadFile && !working ? "pointer" : "not-allowed"
+                                }}
+                            >
+                                {working ? "Subiendo..." : (shareWithTeam ? "Compartir" : "Subir")}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

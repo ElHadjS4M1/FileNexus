@@ -18,9 +18,10 @@ export function AuthProvider({ children }) {
     async function checkSession() {
       try {
         const result = await authApi.checkSession();
-        if (result && result.user) {
+        // /me returns user object directly (not wrapped in {user: ...})
+        if (result && result.id && result.username) {
           // Session valid but keys not unlocked
-          setSessionUser(result.user);
+          setSessionUser(result);
         }
       } catch {
         // No valid session

@@ -12,6 +12,7 @@ export type FileCreateInput = {
   ekOwner: Buffer;
   hashC?: Buffer;
   signature?: Buffer;
+  projectId?: string;
 };
 
 /**
@@ -32,6 +33,7 @@ export const saveFile = (payload: FileCreateInput): Promise<File> =>
       ekOwner: payload.ekOwner,
       hashC: payload.hashC,
       signature: payload.signature,
+      projectId: payload.projectId,
     },
   });
 

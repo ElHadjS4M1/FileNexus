@@ -50,6 +50,26 @@ router.post('/', upload.single('ciphertext'), async (req, res, next) => {
     if (!user) {
       throw new HttpError(404, 'User not found');
     }
+
+    const projectId = req.body.projectId as string | undefined;
+
+    // Verify user has access to the project if projectId is provided
+    if (projectId) {
+      const project = await prisma.project.findUnique({
+        where: { id: projectId },
+        include: { members: true },
+      });
+      if (!project) {
+        throw new HttpError(404, 'Project not found');
+      }
+      // User must be leader or member of the project
+      const isMember = project.leaderId === req.authUser.id ||
+        project.members.some((m: { userId: string }) => m.userId === req.authUser!.id);
+      if (!isMember) {
+        throw new HttpError(403, 'No tienes acceso a este proyecto');
+      }
+    }
+
     let saved;
     if (req.file) {
       const { filename, sizeBytes, aeadNonce, ekOwner, hashC, signature, meta: metaRaw } = req.body;
@@ -82,6 +102,7 @@ router.post('/', upload.single('ciphertext'), async (req, res, next) => {
         filePath: storedFile.relativePath,
         hashC: hashC ? Buffer.from(hashC, 'base64') : undefined,
         signature: signature ? Buffer.from(signature, 'base64') : undefined,
+        projectId,
       });
     } else {
       const payload = fileUploadSchema.parse(req.body);
@@ -97,7 +118,37 @@ router.post('/', upload.single('ciphertext'), async (req, res, next) => {
         ekOwner: Buffer.from(payload.ekOwner, 'base64'),
         filePath: storedFile.relativePath,
         hashC: b64(payload.hashC),
+        projectId,
       });
+    }
+
+    // Auto-share with project members if projectId and encryptedKeys are provided
+    if (projectId && saved) {
+      // Parse encryptedKeys from request body (client sends array of {userId, encryptedKey})
+      let encryptedKeysRaw = req.body.encryptedKeys;
+      if (typeof encryptedKeysRaw === 'string') {
+        try {
+          encryptedKeysRaw = JSON.parse(encryptedKeysRaw);
+        } catch {
+          // empty, ignore parse error
+        }
+      }
+
+      if (Array.isArray(encryptedKeysRaw) && encryptedKeysRaw.length > 0) {
+        // Create FileShare for each recipient
+        for (const entry of encryptedKeysRaw) {
+          if (entry.userId && entry.encryptedKey) {
+            await prisma.fileShare.create({
+              data: {
+                fileId: saved.id,
+                userId: entry.userId,
+                sharedById: req.authUser.id,
+                encryptedKey: Buffer.from(entry.encryptedKey, 'base64'),
+              },
+            });
+          }
+        }
+      }
     }
 
     res.status(201).json({
@@ -105,6 +156,7 @@ router.post('/', upload.single('ciphertext'), async (req, res, next) => {
       filename: saved.filename,
       sizeBytes: saved.sizeBytes,
       createdAt: saved.createdAt,
+      projectId: projectId || null,
     });
   } catch (error) {
     if (req.file) {
@@ -241,6 +293,83 @@ router.delete('/:id/shares/:userId', async (req, res, next) => {
   }
 });
 
+// Share existing file with team
+router.post('/:id/share-with-team', async (req, res, next) => {
+  try {
+    if (!req.authUser) {
+      throw new HttpError(401, 'Authentication required');
+    }
+
+    const fileId = req.params.id;
+    const { projectId, encryptedKeys } = req.body;
+
+    // Verify file access and project membership
+    const file = await prisma.file.findUnique({
+      where: { id: fileId },
+    });
+
+    if (!file) {
+      throw new HttpError(404, 'File not found');
+    }
+
+    const isOwner = file.ownerId === req.authUser.id;
+    let hasAccess = isOwner;
+
+    if (!isOwner) {
+      // Check if user has share access
+      const share = await prisma.fileShare.findUnique({
+        where: {
+          fileId_userId: { fileId, userId: req.authUser.id },
+        },
+      });
+      hasAccess = !!share;
+    }
+
+    // Allow if owner OR (file is in project AND user has access AND target project matches)
+    if (!isOwner && (!file.projectId || file.projectId !== projectId || !hasAccess)) {
+      throw new HttpError(403, 'You do not have permission to share this file');
+    }
+
+    // Update file's projectId only if owner and not set
+    if (isOwner && !file.projectId) {
+      await prisma.file.update({
+        where: { id: fileId },
+        data: { projectId },
+      });
+    }
+
+    // Create FileShares for each recipient
+    let sharesCreated = 0;
+    if (Array.isArray(encryptedKeys)) {
+      for (const entry of encryptedKeys) {
+        if (entry.userId && entry.encryptedKey) {
+          // Check if share already exists
+          const existing = await prisma.fileShare.findUnique({
+            where: {
+              fileId_userId: { fileId, userId: entry.userId },
+            },
+          });
+          if (!existing) {
+            await prisma.fileShare.create({
+              data: {
+                fileId,
+                userId: entry.userId,
+                sharedById: req.authUser.id,
+                encryptedKey: Buffer.from(entry.encryptedKey, 'base64'),
+              },
+            });
+            sharesCreated++;
+          }
+        }
+      }
+    }
+
+    res.json({ success: true, sharesCreated });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // Get files shared with current user
 router.get('/shared/with-me', async (req, res, next) => {
   try {
@@ -289,6 +418,81 @@ router.get('/shared/:id', async (req, res, next) => {
       hashC: share.file.hashC?.toString('base64'),
       signature: share.file.signature?.toString('base64'),
       ownerPublicKey: ownerKey?.jwk || ownerKey,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Get files shared via project (team shared only)
+router.get('/shared/project/:projectId', async (req, res, next) => {
+  try {
+    if (!req.authUser) {
+      throw new HttpError(401, 'Authentication required');
+    }
+
+    const projectId = req.params.projectId;
+
+    // Get files that belong to the project and are shared with the user
+    const shares = await prisma.fileShare.findMany({
+      where: {
+        userId: req.authUser.id,
+        file: {
+          projectId: projectId,
+        },
+      },
+      include: {
+        file: {
+          include: {
+            owner: { select: { username: true } },
+          },
+        },
+        sharedBy: { select: { username: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // Get files owned by the user that are in the project
+    const myFiles = await prisma.file.findMany({
+      where: {
+        projectId: projectId,
+        ownerId: req.authUser.id,
+      },
+      include: {
+        owner: { select: { username: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // Combine and format
+    const allFiles = [
+      ...shares.map((s) => ({
+        id: s.file.id,
+        filename: s.file.filename,
+        sizeBytes: s.file.sizeBytes,
+        ownerUsername: s.file.owner.username,
+        sharedByUsername: s.sharedBy.username,
+        createdAt: s.file.createdAt,
+        sharedAt: s.createdAt,
+        projectId: s.file.projectId,
+      })),
+      ...myFiles.map((f) => ({
+        id: f.id,
+        filename: f.filename,
+        sizeBytes: f.sizeBytes,
+        ownerUsername: f.owner.username,
+        sharedByUsername: f.owner.username, // Shared by me (owner)
+        createdAt: f.createdAt,
+        sharedAt: f.createdAt, // Using created date as shared date for owner
+        projectId: f.projectId,
+      })),
+    ];
+
+    // Sort by sharedAt/createdAt desc
+    allFiles.sort((a, b) => new Date(b.sharedAt).getTime() - new Date(a.sharedAt).getTime());
+
+    res.json({
+      files: allFiles,
     });
   } catch (error) {
     next(error);

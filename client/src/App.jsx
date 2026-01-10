@@ -9,6 +9,7 @@ import Dashboard from "./components/Dashboard";
 
 import Documents from "./components/Documents";
 import Team from "./components/Team";
+import Users from "./components/Users";
 
 export default function App() {
   return (
@@ -20,6 +21,7 @@ export default function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/documents" element={<Documents />} />
             <Route path="/team" element={<Team />} />
+            <Route path="/users" element={<Users />} />
             <Route path="/settings" element={<Settings />} />
           </Route>
         </Routes>

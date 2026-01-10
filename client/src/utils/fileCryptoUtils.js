@@ -152,3 +152,30 @@ export async function verifySignature(hashBase64, signatureBase64, verifyKey) {
     hashBuf
   );
 }
+
+/**
+ * Encrypt AES key for multiple recipients.
+ * @param {string} aesRawBase64 - Base64 encoded raw AES key
+ * @param {Array<{id: string, publicKeyJwk: object}>} recipients - Array of recipients with their public keys
+ * @returns {Promise<Array<{userId: string, encryptedKey: string}>>} - Array of encrypted keys for each recipient
+ */
+export async function encryptKeyForRecipients(aesRawBase64, recipients) {
+  const encryptedKeys = [];
+
+  for (const recipient of recipients) {
+    try {
+      if (!recipient.publicKeyJwk) continue;
+
+      const publicKey = await importPublicKeyFromJwk(recipient.publicKeyJwk);
+      const encryptedKey = await encryptAesKeyWithPublicKey(aesRawBase64, publicKey);
+      encryptedKeys.push({
+        userId: recipient.id,
+        encryptedKey,
+      });
+    } catch (err) {
+      console.error(`Failed to encrypt for recipient ${recipient.id}:`, err);
+    }
+  }
+
+  return encryptedKeys;
+}

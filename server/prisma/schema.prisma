@@ -33,15 +33,24 @@ model User {
   totpSecretEnc Bytes?
   totpEnabled   Boolean     @default(false)
   createdAt     DateTime    @default(now())
+  
+  // File relations
   files         File[]
   sharedWithMe  FileShare[] @relation("SharedWithUser")
   filesIShared  FileShare[] @relation("SharedByUser")
+  
+  // Team relations
+  managedDepartment  Department?       @relation("DeptManager")
+  ledProjects        Project[]         @relation("ProjectLeader")
+  projectMemberships ProjectMember[]
 }
 
 model File {
   id         String      @id @default(uuid())
   ownerId    String
   owner      User        @relation(fields: [ownerId], references: [id])
+  projectId  String?     // null = personal file, set = project file
+  project    Project?    @relation(fields: [projectId], references: [id])
   filename   String
   sizeBytes  Int
   meta       Json?
@@ -54,6 +63,7 @@ model File {
   shares     FileShare[]
 
   @@index([ownerId])
+  @@index([projectId])
 }
 
 model FileShare {
@@ -70,4 +80,42 @@ model FileShare {
   @@unique([fileId, userId])
   @@index([userId])
   @@index([fileId])
+}
+
+// ============ TEAM STRUCTURE ============
+
+model Department {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  managerId   String?   @unique  // dept_head - optional, can be assigned later
+  manager     User?     @relation("DeptManager", fields: [managerId], references: [id])
+  projects    Project[]
+  createdAt   DateTime  @default(now())
+}
+
+model Project {
+  id            String          @id @default(uuid())
+  name          String
+  departmentId  String
+  department    Department      @relation(fields: [departmentId], references: [id])
+  leaderId      String?         // project_head - optional, can be assigned later
+  leader        User?           @relation("ProjectLeader", fields: [leaderId], references: [id])
+  members       ProjectMember[]
+  files         File[]          // Project files
+  createdAt     DateTime        @default(now())
+
+  @@unique([departmentId, name])
+  @@index([leaderId])
+}
+
+model ProjectMember {
+  id        String   @id @default(uuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  addedAt   DateTime @default(now())
+
+  @@unique([projectId, userId])
+  @@index([userId])
 }
