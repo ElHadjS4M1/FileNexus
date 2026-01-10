@@ -14,7 +14,7 @@ const defaultOrigins = [
 ];
 
 const allowedOrigins = appEnv.CORS_ALLOWED_ORIGINS
-  ? appEnv.CORS_ALLOWED_ORIGINS.split(',').map((origin) => origin.trim())
+  ? appEnv.CORS_ALLOWED_ORIGINS.split(',').map((origin) => origin.trim().replace(/\/$/, ''))
   : defaultOrigins;
 
 /**
