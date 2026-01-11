@@ -1,4 +1,4 @@
-import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rename, writeFile, copyFile, unlink } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
 
@@ -46,7 +46,16 @@ export const writeCipherFileFromPath = async (
   const relativePath = `${username}/${fileId}.bin`;
   const absolutePath = resolve(BASE_DIR, relativePath);
   await mkdir(dirname(absolutePath), { recursive: true });
-  await rename(tempPath, absolutePath);
+  try {
+    await rename(tempPath, absolutePath);
+  } catch (error: any) {
+    if (error.code === 'EXDEV') {
+      await copyFile(tempPath, absolutePath);
+      await unlink(tempPath);
+    } else {
+      throw error;
+    }
+  }
   return {
     id: fileId,
     absolutePath,

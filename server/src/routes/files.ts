@@ -159,6 +159,7 @@ router.post('/', upload.single('ciphertext'), async (req, res, next) => {
       projectId: projectId || null,
     });
   } catch (error) {
+    console.error('File upload error:', error);
     if (req.file) {
       await unlink(req.file.path).catch(() => undefined);
     }
