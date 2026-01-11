@@ -12,16 +12,25 @@ import { projectsRouter } from './projects';
  * @param {Express} app - Referencia a la aplicación de Express.
  * @returns {void}
  */
+import { Router } from 'express';
+
+// ... imports ...
+
 export const registerRoutes = (app: Express): void => {
-  app.get('/health', (_req, res) => {
+  const apiRouter = Router();
+
+  apiRouter.get('/health', (_req, res) => {
     res.json({ status: 'ok' });
   });
 
-  app.use('/admin', adminRouter);
-  app.use('/auth', authRouter);
-  app.use('/files', filesRouter);
-  app.use('/me', meRouter);
-  app.use('/users', usersRouter);
-  app.use('/departments', departmentsRouter);
-  app.use('/projects', projectsRouter);
+  apiRouter.use('/admin', adminRouter);
+  apiRouter.use('/auth', authRouter);
+  apiRouter.use('/files', filesRouter);
+  apiRouter.use('/me', meRouter);
+  apiRouter.use('/users', usersRouter);
+  apiRouter.use('/departments', departmentsRouter);
+  apiRouter.use('/projects', projectsRouter);
+
+  // Mount all API routes under /api
+  app.use('/api', apiRouter);
 };
